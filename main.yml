@@ -38,6 +38,14 @@
     - include: containers/roles/setup.yml
     - include: containers/roles/test.yml
     - include: containers/roles/cleanup.yml
+    #KVM
+    - name: Test KVM compatibility
+      tags: kvm_test
+      become: yes
+      block:
+      - include: kvm/roles/setup.yml
+      - include: kvm/roles/test.yml
+      - include: kvm/roles/cleanup.yml
     #EXAMPLE
     #- include: example/roles/setup.yml
     #- include: example/roles/test.yml

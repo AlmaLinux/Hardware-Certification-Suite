@@ -20,3 +20,6 @@ test_network:
 test_raid:
   # Test duration in seconds
   duration: 14400
+
+#KVM
+kvm_test_dir: "/root/kvm_test"

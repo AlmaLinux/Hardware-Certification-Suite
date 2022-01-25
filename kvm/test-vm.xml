@@ -1,0 +1,34 @@
+<domain type='kvm'>
+  <arch name="x86_64">
+    <machine>pc</machine>
+  </arch>
+  <name>test_vm</name>
+  <memory unit="MiB">16</memory>
+  <vcpu>1</vcpu>
+  <os>
+    <type>hvm</type>
+  </os>
+  <clock sync="localtime"/>
+  <devices>
+    <emulator>/usr/bin/qemu-kvm</emulator>
+    <interface type='network'>
+      <source network='default'/>
+      <target dev='vnet0'/>
+    </interface>
+    <serial type='pty'>
+      <target dev="tty" port="0"/>
+    </serial>
+    <console type='pty'>
+      <target type='virtio' port="1"/>
+    </console>
+    <input type='mouse' bus='virtio'/>
+    <input type='keyboard' bus='virtio'/>
+    <video>
+      <model type='vga' vram='16384' heads='1'/>
+      <driver name='qemu'/>
+    </video>
+    <graphics type='spice' port='-1' tlsPort='-1' autoport='yes'>
+      <channel name='main' mode='insecure'/>
+    </graphics>
+  </devices>
+</domain>
