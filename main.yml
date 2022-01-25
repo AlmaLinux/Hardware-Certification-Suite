@@ -19,6 +19,10 @@
     - include: cpu/roles/setup.yml
     - include: cpu/roles/test.yml
     - include: cpu/roles/cleanup.yml
+    #Network
+    - include: network/roles/setup.yml
+    - include: network/roles/test.yml
+    - include: network/roles/cleanup.yml
     #EXAMPLE
     #- include: example/roles/setup.yml
     #- include: example/roles/test.yml

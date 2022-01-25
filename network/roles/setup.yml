@@ -1,0 +1,11 @@
+---
+
+- name: Network test. Install dependent software
+  yum:
+    name:
+      - iperf3
+      - ethtool
+      - net-tools
+    enablerepo: epel
+  loop: [ lts_ip, sut_ip ]
+  tags: test_network
