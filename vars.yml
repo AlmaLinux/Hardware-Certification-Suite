@@ -1,0 +1,10 @@
+---
+
+#GENERAL
+_ssh_connection: "{{ hostvars[inventory_hostname]['ansible_env'].SSH_CONNECTION }}"
+lts_ip: "{{ _ssh_connection.split(' ')[0] }}"
+sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
+
+#CPU
+test_cpu:
+  duration: 1h

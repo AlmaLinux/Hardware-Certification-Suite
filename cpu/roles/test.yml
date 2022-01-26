@@ -1,0 +1,10 @@
+---
+
+- name: Test CPU
+  command: sh /root/run_test.sh {{ test_cpu['duration'] }}
+  register: output
+  tags: test_cpu
+
+- name: Test CPU copy log
+  local_action: copy content="{{ output.stdout }}" dest="logs/cpu_testing.log"
+  tags: test_cpu

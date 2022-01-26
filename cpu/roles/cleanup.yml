@@ -1,0 +1,13 @@
+---
+
+- name: Test CPU remove test script
+  file:
+    path: /root/run_test.sh
+    state: absent
+  tags: test_cpu
+
+- name: Test CPU cleanup utilities
+  yum:
+    name: stress-ng
+    state: absent
+  tags: test_cpu
