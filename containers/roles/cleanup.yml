@@ -1,0 +1,8 @@
+---
+
+- name: Test CONTAINERS remove test script
+  file:
+    path: /root/run-test.sh
+    state: absent
+  tags: test_containers
+

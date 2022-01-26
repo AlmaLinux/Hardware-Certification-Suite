@@ -1,0 +1,5 @@
+---
+
+- name: Test CONTAINERS copy script
+  copy: src=containers/run-test.sh dest=/root mode=0755
+  tags: test_containers

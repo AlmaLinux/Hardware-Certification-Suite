@@ -1,0 +1,10 @@
+---
+
+- name: Test CONTAINERS
+  shell: /root/run-test.sh 2>&1
+  register: output
+  tags: test_containers
+
+- name: Test CONTAINERS copy log
+  local_action: copy content="{{ output.stdout }}" dest="logs/containers_testing.log"
+  tags: test_containers

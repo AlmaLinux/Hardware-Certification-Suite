@@ -34,6 +34,10 @@
       - include: hw_detection/roles/setup.yml
       - include: hw_detection/roles/test.yml
       - include: hw_detection/roles/cleanup.yml
+    # CONTAINERS
+    - include: containers/roles/setup.yml
+    - include: containers/roles/test.yml
+    - include: containers/roles/cleanup.yml
     #EXAMPLE
     #- include: example/roles/setup.yml
     #- include: example/roles/test.yml
