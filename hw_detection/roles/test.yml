@@ -1,0 +1,9 @@
+---
+
+- name: Hardware Detection Report
+  command: sh /root/hw_detection.sh
+  ignore_errors: yes
+  register: report
+
+- name: Copy hw report to logs
+  local_action: copy content="{{ report.stdout }}" dest="logs/hw_detection.log"

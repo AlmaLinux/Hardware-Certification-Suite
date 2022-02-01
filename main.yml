@@ -27,6 +27,13 @@
     - include: raid/roles/setup.yml
     - include: raid/roles/test.yml
     - include: raid/roles/cleanup.yml
+    #HW detection
+    - name: Hardware detection
+      tags: hw_detection
+      block:
+      - include: hw_detection/roles/setup.yml
+      - include: hw_detection/roles/test.yml
+      - include: hw_detection/roles/cleanup.yml
     #EXAMPLE
     #- include: example/roles/setup.yml
     #- include: example/roles/test.yml
