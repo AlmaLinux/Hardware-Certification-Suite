@@ -1,5 +1,6 @@
 Readme
 ===
+
 LTS - local testing server  
 SUT - system under tests
 
@@ -68,6 +69,14 @@ Test tags
 You can run tests by tag
 
 * test_cpu - Run cpu test `ansible-playbook -i 192.168.244.7, main.yml --tags test_cpu`
+
+Results
+===
+The ansible output will display information about each test. If there are errors, the tests will be colored red.
+
+Summary information will display the test result. Notice the ignored=0 value. If it is > 0, the test has failed.  
+The value of failed is always 0, due to skipping failed tests for further sequential execution.  
+Example: `127.0.0.1 : ok=9 changed=7 unreachable=0 failed=0 skipped=0 rescued=0 ignored=1`
 
 TIPS
 ===

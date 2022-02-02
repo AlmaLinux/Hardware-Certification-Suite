@@ -15,7 +15,7 @@ fi
 log "Run CPU stress test... ${TIMEOUT}"
 
 # TODO: Can't pass output to var
-stress-ng --cpu 0 --cpu-method all -t $TIMEOUT --metrics --verbose &>> $LOG_FILE 2>&1
+stress-ng --cpu 0 --cpu-method all -t $TIMEOUT --metrics --verbose &>>$LOG_FILE 2>&1
 
 CODE=$?
 

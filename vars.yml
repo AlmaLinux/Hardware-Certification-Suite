@@ -7,6 +7,7 @@ sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
 
 #CPU
 test_cpu:
+  # Test duration seconds, minutes, hours, days, or years with the s, m, h, d, or y suffix.
   duration: 4h
 
 #Network
