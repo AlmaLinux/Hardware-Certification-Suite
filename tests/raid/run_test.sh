@@ -3,6 +3,7 @@
 set +ex
 
 TEST_TIME=${1-14400}
+PRELOADER=${2-false}
 
 global_result=true
 
@@ -109,7 +110,9 @@ if [ "$global_result" == "true" ]; then
         while kill -0 "$fio_pid" 2>/dev/null
         do
             icon=$(( (icon+1) %4 ))
-            printf "\r${spin:$icon:1}"
+            if [ "$PRELOADER" != "disable-preloader" ]; then
+                printf "\r${spin:$icon:1}"
+            fi
             sleep 0.1
 
             # Check Raid status

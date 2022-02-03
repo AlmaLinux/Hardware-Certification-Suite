@@ -41,7 +41,7 @@
 
 #Test
 - name: Tast Raid - run test
-  shell: "{{ sut_tests_dir }}/raid/run_test.sh {{ test_raid['duration'] }}"
+  shell: "{{ sut_tests_dir }}/raid/run_test.sh {{ test_raid['duration'] }} disable-preloader"
   register: output
 
 - name: Tast Raid - copy log

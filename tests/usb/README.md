@@ -1,4 +1,5 @@
 ## USB testing
+The test determines the health of the USB ports. For testing, you need to have as many USB devices as there are ports to be tested.
 ### Test algorithm
 Interactive test.
 1. Unplug all devices from USB ports excludes the keyboard.
@@ -11,14 +12,14 @@ Interactive test.
 ### Running test
 1. On LTS execute: ansible-playbook -i <SUT_IP>, -u root interactive.yml
 ### StdOut example
-TASK [Result] 
+TASK [Result]
 
 ***
 
 fatal: [10.51.0.5]: FAILED! => {"changed": false, "msg": "Expected 4 devices, detected 1! Test Failed!"}
 
-PLAY RECAP 
+PLAY RECAP
 
 ***
 
-10.51.0.5                  : ok=11   changed=6    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0 
+10.51.0.5: ok=11   changed=6    unreachable=0    failed=1    skipped=2    rescued=0    ignored=0

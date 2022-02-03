@@ -3,7 +3,7 @@
 set +ex
 
 if [ $# -lt 2 ]; then
-	echo "usage: $0 <LTS-host> <SUT-host> [test-time-in-minuts] [target-network-speed]"
+	echo "usage: $0 <LTS-host> <SUT-host> [test-time-in-minuts] [target-network-speed] [disable-preloader]"
 	exit 1
 fi
 
@@ -11,6 +11,7 @@ LTS_HOST=$1
 SUT_HOST=$2
 TEST_TIME=${3-14400}
 TARGET_SPEED=${4-false}
+PRELOADER=${5-false}
 
 ALLOWED_PERCENTAGE=0.8
 global_result=true
@@ -96,15 +97,17 @@ iperf3_test() {
         fi
 
         # Progress icon
-        spin='-\|/'
-        icon=0
-        while sut_command 'kill -0 '"$iperf3_client_pid"' 2>/dev/null' true
-        do
-            icon=$(( (icon+1) %4 ))
-            printf "\r${spin:$icon:1}"
-            sleep 0.1
-        done
-        printf "\n"
+        if [ "$PRELOADER" != "disable-preloader" ]; then
+            spin='-\|/'
+            icon=0
+            while sut_command 'kill -0 '"$iperf3_client_pid"' 2>/dev/null' true
+            do
+                icon=$(( (icon+1) %4 ))
+                printf "\r${spin:$icon:1}"
+                sleep 0.1
+            done
+            printf "\n"
+        fi
         # End progress icon
 
         device_result=($(sut_command "cat /tmp/stress_testing_network_iperf3_client.log | grep -oP '\d+\.\d+ (?=Mbits/sec)' &2>/dev/null"))

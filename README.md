@@ -7,16 +7,16 @@ Configure LTS
 ===
 Example SUT IP address: `192.168.244.7`
 
-1. Install Ansible
+1. Install Ansible  
 `yum --enablerepo=epel install ansible`
 
-2. Add key
+2. Add key  
 `ssh-keygen -t rsa`
 
-3. Add a key to SUT, a comma after the IP address is required
+3. Add a key to SUT, a comma after the IP address is required  
 `ansible all -i 192.168.244.7, -m authorized_key -a "user=root key='{{ lookup('file', '/root/.ssh/id_rsa.pub') }}' path=/root/.ssh/authorized_keys manage_dir=no" --ask-pass`
 
-4. Check connection with SUT, comma after IP address is required
+4. Check connection with SUT, comma after IP address is required  
 `ansible all -i 192.168.244.7, -m ping -u root`
 
 How to add a new test
@@ -53,10 +53,17 @@ Each test must be marked with a tag, for example `tags: test_example`
 
 Add your test settings to the `~/hardware-certification/vars.yml` file if required
 
-How to run test on SUT
+All tests are always run on LTS. How to run a test on LTS.
 ===
-Run tests on the LTS, comma after IP address is required  
+To run all automated tests:
+* Run tests on the LTS, comma after IP address is required  
 `ansible-playbook -i 192.168.244.7, automated.yml`
+
+* Run Phoronix tests on the LTS  
+`ansible-playbook -i 192.168.244.7, automated.yml --tags phoronix`
+
+To run all interactive tests: Run tests on the LTS, comma after IP address is required  
+`ansible-playbook -i 192.168.244.7, interactive.yml`
 
 How to run locally to test play
 ===
@@ -79,7 +86,7 @@ Tests can be configured via `~/hardware-certification/vars.yml` file.
 
 Test tags
 ===
-You can run tests by tag.  
+You can run automated tests by tag.
 For example:  
 `ansible-playbook -i 192.168.244.7, automated.yml --tags cpu`
 
@@ -96,6 +103,8 @@ Available tags:
 * network - test
 * raid - test
 * phoronix - test suits (can only be run by tag)
+
+Interactive tests can't be run separately.
 
 Results
 ===

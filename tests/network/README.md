@@ -7,7 +7,7 @@ The network test uses the iperf3 tool.
 1. Using the lshw tool, the test detects all network adapters.
 2. One adapter is selected in turn for testing, all others are temporarily disabled.
 3. Using ethtool for each adapter, the maximum speed is defined.
-4. Next on LTS starts the iperf3 server and on SUT runs the iperf3 client for 2-4 hours.
+4. Next on LTS starts the iperf3 server and on SUT runs the iperf3 client for 4 hours.
 5. The client and server continuously exchange packets and measure the transfer rate.
 
 After the end of the test, the average data transfer rate and the maximum adapter speed are compared, and the percentage deviation from the maximum is calculated. The test is considered passed if the speed during the test did not drop below 80% and the average speed is above 80%.

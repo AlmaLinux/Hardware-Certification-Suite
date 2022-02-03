@@ -1,7 +1,7 @@
 ## Raid testing
 ### Test algorithm
 1. Test looks in /proc/mdstat for information about RAID.
-2. If RAID is detected, using fio utility starts storage stress testing.
+2. If RAID is detected, using fio utility starts storage stress testing for 4 hours.
 3. During storage stress testing, using mdadm utility checks RAID status (every ~20 seconds).
 4. The test is passed if at the end of testing RAID status is good.
 ### Running test automatically

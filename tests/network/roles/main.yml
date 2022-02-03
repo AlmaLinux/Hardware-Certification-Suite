@@ -22,7 +22,7 @@
 
 #Test
 - name: Test Network - run test
-  local_action: command sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }}
+  local_action: command sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }} disable-preloader
   register: output
 
 - name: Test Network - copy log
