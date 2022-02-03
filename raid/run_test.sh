@@ -82,6 +82,7 @@ fi
 if [ "$global_result" == "true" ]; then
     # Catching logical names of raid devices
     raid_devices=( $(cat /proc/mdstat | grep -oP '\w+(?= : active)') )
+    raid_devices_string="/dev/$(echo ${raid_devices[@]} | sed 's/ /\/:dev\//')"
     if [ ${#raid_devices[@]} -lt 1 ]; then
         error "Raid devices not found! Test aborted!"
         global_result=false
@@ -89,7 +90,7 @@ if [ "$global_result" == "true" ]; then
         # Start storage stress test
         fio_pid=$(nohup fio -direct=1 -iodepth=32 -rw=randrw\
         -bs=4k -numjobs=4 -time_based=1 -runtime="$TEST_TIME"\
-        -name=test -size=1G > /tmp/stress_testing_storage_fio.log 2>&1 & echo $!)
+        -name=test -size=1G -filename="$raid_devices_string" > /tmp/stress_testing_storage_fio.log 2>&1 & echo $!)
 
         sleep 1
 
