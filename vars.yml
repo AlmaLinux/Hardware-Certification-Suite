@@ -24,3 +24,8 @@ test_network:
 test_raid:
   # Test duration in seconds
   duration: "{{ raid_duration|default('14400') }}"
+
+#PHORONIX
+test_phoronix:
+  # Test suites
+  suites: "{{ phoronix_suites|default('database server server-memory disk kernel single-threaded') }}"

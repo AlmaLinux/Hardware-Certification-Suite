@@ -1,0 +1,88 @@
+---
+
+#Setup
+- name: Phoronix - setup
+  yum:
+    name:
+      - phoronix-test-suite
+      - uuid-devel
+      - snappy-devel
+      - gflags-devel
+      - erlang
+      - opencl-headers
+      - glfw-devel
+      - yasm
+      - nasm
+      - p7zip
+      - p7zip-plugins
+      - meson
+      - opencv-devel
+      - google-benchmark-devel
+    enablerepo: powertools,epel-playground,epel
+
+- name: Phoronix - copy config on SUT
+  copy:
+    src: "{{ lts_tests_dir }}/phoronix/sources/phoronix-test-suite.xml"
+    dest: "/etc/phoronix-test-suite.xml"
+    mode: 0777
+
+#Test
+- name: Phoronix - install & run tests
+  command: phoronix-test-suite batch-benchmark {{ test_phoronix['suites'] }}
+  register: output
+
+#UNRESOLVED DEPENDENCE
+#phoronix-test-suite benchmark machine-learning
+#phoronix-test-suite benchmark hpc
+#phoronix-test-suite benchmark python
+#phoronix-test-suite benchmark server-cpu-tests
+#! scipy and sklearn = python-scikit-learn
+
+- name: Phoronix - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/phoronix.log"
+
+- name: Phoronix - get results
+  command: ls -1 /var/lib/phoronix-test-suite/test-results/
+  register: results
+
+- name: Phoronix - convert results to PDF
+  shell: "phoronix-test-suite result-file-to-pdf {{ item }} | grep -oP '/(.*.pdf)' | sed 's/ //'"
+  with_items: "{{ results.stdout_lines }}"
+  register: pdf_reports
+
+- name: Phoronix - convert results to JSON
+  shell: "phoronix-test-suite result-file-to-json {{ item }} | grep -oP '/(.*.json)' | sed 's/ //'"
+  with_items: "{{ results.stdout_lines }}"
+  register: json_reports
+
+- name: Phoronix - copy PDF reports
+  fetch:
+    src: "{{ item.stdout }}"
+    dest: "{{ lts_logs_dir }}"
+  with_items: "{{ pdf_reports.results }}"
+
+- name: Phoronix - copy JSON reports
+  fetch:
+    src: "{{ item.stdout }}"
+    dest: "{{ lts_logs_dir }}"
+  with_items: "{{ json_reports.results }}"
+
+#Cleanup
+- name: Phoronix - cleanup
+  yum:
+    name:
+      - phoronix-test-suite
+      - uuid-devel
+      - snappy-devel
+      - gflags-devel
+      - erlang
+      - opencl-headers
+      - glfw-devel
+      - yasm
+      - nasm
+      - p7zip
+      - p7zip-plugins
+      - meson
+      - opencv-devel
+      - google-benchmark-devel
+    state: removed

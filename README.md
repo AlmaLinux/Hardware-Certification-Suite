@@ -95,6 +95,7 @@ Available tags:
 * kvm - test
 * network - test
 * raid - test
+* phoronix - test suits (can only be run by tag)
 
 Results
 ===
