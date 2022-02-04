@@ -1,6 +1,0 @@
----
-
-- name: USB test. Remove dependent software
-  yum:
-    name: usbutils
-    state: absent

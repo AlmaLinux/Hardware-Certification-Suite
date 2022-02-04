@@ -1,9 +1,0 @@
----
-- name: Raid test
-  command: sh /root/run_test.sh {{ test_raid['duration'] }}
-  register: output
-  tags: test_raid
-
-- name: Raid test log copy
-  local_action: copy content="{{ output.stdout }}" dest="logs/raid_testing.log"
-  tags: test_raid

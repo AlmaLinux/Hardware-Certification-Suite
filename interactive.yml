@@ -1,9 +1,9 @@
 ---
 
 #USB
-- import_playbook: usb/usb_playbook_step1.yml
-- import_playbook: usb/usb_playbook_step2.yml
+- import_playbook: tests/usb/usb_playbook_step1.yml
+- import_playbook: tests/usb/usb_playbook_step2.yml
 
 #Example
-# - import_playbook: example/example_playbook_step1.yml
-# - import_playbook: example/example_playbook_step2.yml
+# - import_playbook: tests/example/example_playbook_step1.yml
+# - import_playbook: tests/example/example_playbook_step2.yml

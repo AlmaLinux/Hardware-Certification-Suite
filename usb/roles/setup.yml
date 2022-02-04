@@ -1,6 +1,0 @@
----
-
-- name: USB test. Install dependent software
-  yum:
-    name: usbutils
-    state: latest

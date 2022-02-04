@@ -1,0 +1,27 @@
+---
+
+#Setup
+- name: Test Network - setup
+  yum:
+    name:
+      - iperf3
+      - ethtool
+      - net-tools
+    enablerepo: epel
+  loop: [ lts_ip, sut_ip ]
+
+#Test
+- name: Test Network - run test
+  local_action: command sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }}
+  register: output
+
+- name: Test Network - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/network.log"
+
+#Cleanup
+- name: Test Network - cleanup
+  yum:
+    name:
+      - iperf3
+    state: removed
+  loop: [ lts_ip, sut_ip ]

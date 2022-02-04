@@ -1,4 +1,0 @@
----
-
-- name: Copy hw detection script
-  copy: src=hw_detection/hw_detection.sh dest=/root mode=0777

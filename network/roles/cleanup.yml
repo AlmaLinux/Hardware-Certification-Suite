@@ -1,9 +1,0 @@
----
-
-- name: Network test. Remove dependent software
-  yum:
-    name:
-      - iperf3
-    state: removed
-  loop: [ lts_ip, sut_ip ]
-  tags: test_network

@@ -3,7 +3,10 @@
 #GENERAL
 _ssh_connection: "{{ hostvars[inventory_hostname]['ansible_env'].SSH_CONNECTION }}"
 lts_ip: "{{ _ssh_connection.split(' ')[0] }}"
+lts_tests_dir: "./tests"
+lts_logs_dir: "./logs"
 sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
+sut_tests_dir: "/root/hc-tests"
 
 #CPU
 test_cpu:
@@ -21,6 +24,3 @@ test_network:
 test_raid:
   # Test duration in seconds
   duration: 14400
-
-#KVM
-kvm_test_dir: "/root/kvm_test"

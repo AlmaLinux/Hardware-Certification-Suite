@@ -1,0 +1,19 @@
+---
+
+- name: Test cpu - setup
+  yum:
+    name: stress-ng
+    state: latest
+    enablerepo: epel
+
+- name: Test CPU - run test
+  shell: "{{ sut_tests_dir }}/cpu/run_test.sh {{ test_cpu['duration'] }}"
+  register: output
+
+- name: Test CPU - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/cpu.log"
+
+- name: Test CPU - cleanup
+  yum:
+    name: stress-ng
+    state: absent

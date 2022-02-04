@@ -1,0 +1,80 @@
+---
+
+- name: Hardware certification
+  hosts: all
+  vars_files:
+    - vars.yml
+  ignore_errors: true
+  tasks:
+
+    #GENERAL SETUP
+    - tags: logs_cleanup
+      block:
+        - name: Find logs
+          local_action: find paths=logs patterns="*.log"
+          register: find_logs
+
+        - name: Cleanup logs
+          local_action: file path="{{ item['path'] }}" state=absent
+          with_items: "{{ find_logs['files'] }}"
+
+    - tags: tests_copy
+      block:
+        - name: Copy tests
+          copy:
+            src: "{{ lts_tests_dir }}/"
+            dest: "{{ sut_tests_dir }}"
+            mode: 0777
+
+    ##########
+
+    #EXAMPLE
+    #- tags: example
+    #  block:
+    #  - include: "{{ lts_tests_dir }}/example/roles/main.yml"
+
+    #CONTAINERS
+    - tags: containers
+      block:
+        - include: "{{ lts_tests_dir }}/containers/roles/main.yml"
+
+    #CPU
+    - tags: cpu
+      block:
+        - include: "{{ lts_tests_dir }}/cpu/roles/main.yml"
+
+    #HW DETECTION
+    - tags: hw_detection
+      block:
+        - include: "{{ lts_tests_dir }}/hw_detection/roles/main.yml"
+
+    #KVM
+    - tags: kvm
+      become: yes
+      block:
+        - include: "{{ lts_tests_dir }}/kvm/roles/main.yml"
+
+    #NETWORK
+    - tags: network
+      block:
+        - include: "{{ lts_tests_dir }}/network/roles/main.yml"
+
+    #PXE
+    - tags: pxe
+      block:
+        - include: "{{ lts_tests_dir }}/pxe/roles/main.yml"
+
+    #RAID
+    - tags: raid
+      block:
+        - include: "{{ lts_tests_dir }}/raid/roles/main.yml"
+
+    ##########
+
+    #GENERAL CLEANUP
+    - tags: tests_cleanup
+      block:
+        - name: Remove tests
+          file:
+            state: absent
+            path: "{{ sut_tests_dir }}"

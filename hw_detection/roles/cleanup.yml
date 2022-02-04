@@ -1,6 +1,0 @@
----
-
-- name: Test CPU remove test script
-  file:
-    path: /root/hw_detection.sh
-    state: absent

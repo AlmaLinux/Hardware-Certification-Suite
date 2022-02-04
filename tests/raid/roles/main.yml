@@ -1,0 +1,23 @@
+---
+
+#Setup
+- name: Tast Raid - install dependent software
+  yum:
+    name:
+      - mdadm
+      - fio
+
+#Test
+- name: Tast Raid - run test
+  shell: "{{ sut_tests_dir }}/raid/run_test.sh {{ test_raid['duration'] }}"
+  register: output
+
+- name: Tast Raid - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/raid.log"
+
+#Cleaup
+- name: Tast Raid - cleanup
+  yum:
+    name:
+      - fio
+    state: removed

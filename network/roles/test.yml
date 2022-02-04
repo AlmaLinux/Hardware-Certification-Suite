@@ -1,9 +1,0 @@
----
-- name: Network test
-  local_action: command sh network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }}
-  register: output
-  tags: test_network
-
-- name: Network test log copy
-  local_action: copy content="{{ output.stdout }}" dest="logs/network_testing.log"
-  tags: test_network

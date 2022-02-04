@@ -1,0 +1,8 @@
+---
+
+- name: Test Hardware Detection - run test
+  shell: "{{ sut_tests_dir }}/hw_detection/run_test.sh"
+  register: output
+
+- name: Test Hardware Detection - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/hw_detection.log"
