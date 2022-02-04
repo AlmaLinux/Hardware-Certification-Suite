@@ -1,0 +1,69 @@
+---
+
+- name: Create vm
+  one_vm:
+    api_password: "{{ apipassword }}"
+    api_url: "{{ apiurl }}"
+    api_username: "{{ apiusername }}"
+    template_id: "{{ TEMPLATE_ID }}"
+    #disk_size: "{{ vm_disk_size | default('30') }} GB"
+    memory: 4 GB
+    cpu: 4
+    vcpu: 4
+    count: "{{ number_of_vm | default(1) }}"
+    attributes:
+      name: "{{ VM_NAME }}"
+  register: created_vm
+  when: one_act == 'crt'
+
+- name: ansible hosts add
+  lineinfile:
+    path: ./ansible_hosts{{ machine_info | default('') }}
+    line: '{{ item.networks[0].ip }}'
+    create: yes
+  with_items: "{{ created_vm.instances }}"
+  when: one_act == 'crt'
+
+- name: vm id add
+  lineinfile:
+    path: ./vm_id{{ machine_info | default('') }}
+    line: '{{ created_vm.instances_ids }}'
+    create: yes
+  when: one_act == 'crt'
+
+- name: Read vmid
+  shell: tail -n 1 ./vm_id{{ machine_info | default('') }}
+  register: vmid
+  when: (one_act == 'hrbt' or one_act == 'rmvm')
+
+- name: Read rebooted_status
+  shell: tail -n 1 ./rebooted_status{{ machine_info | default('') }}
+  register: rbt_stat
+  when: one_act == 'hrbt'
+
+- name: Hard reboot vm
+  one_vm:
+    api_password: "{{ apipassword }}"
+    api_url: "{{ apiurl }}"
+    api_username: "{{ apiusername }}"
+    instance_ids: '{{ vmid.stdout }}'
+    state: rebooted
+    hard: yes
+  ignore_errors: yes
+  when: (one_act == 'hrbt' and rbt_stat.stdout|bool == true)
+
+- name: Remove vm
+  one_vm:
+    api_password: "{{ apipassword }}"
+    api_url: "{{ apiurl }}"
+    api_username: "{{ apiusername }}"
+    instance_ids: '{{ vmid.stdout }}'
+    state: absent
+    hard: yes
+  when: one_act == 'rmvm'
+
+- wait_for_connection:
+    timeout: 180
+  delegate_to: '{{ item.networks[0].ip }}'
+  with_items: "{{ created_vm.instances }}"
+  when: one_act == 'crt'

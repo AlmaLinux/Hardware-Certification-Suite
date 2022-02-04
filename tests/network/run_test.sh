@@ -35,7 +35,7 @@ function info() {
 }
 
 sut_command() {
-    ssh root@$SUT_HOST "$1"
+    ssh -o StrictHostKeyChecking=no root@$SUT_HOST "$1"
     return_code=$?
     if [ $return_code -gt 0 ] && [ "$2" != "true" ]; then
         error "Failed to execution SUT command: $1"

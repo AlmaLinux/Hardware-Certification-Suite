@@ -4,23 +4,23 @@
 _ssh_connection: "{{ hostvars[inventory_hostname]['ansible_env'].SSH_CONNECTION }}"
 lts_ip: "{{ _ssh_connection.split(' ')[0] }}"
 lts_tests_dir: "./tests"
-lts_logs_dir: "./logs"
+lts_logs_dir: "{{ unique_logs_folder|default('logs') }}"
 sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
 sut_tests_dir: "/root/hc-tests"
 
 #CPU
 test_cpu:
   # Test duration seconds, minutes, hours, days, or years with the s, m, h, d, or y suffix.
-  duration: 4h
+  duration: "{{ cpu_duration|default('4h') }}"
 
 #Network
 test_network:
   # Test duration in seconds
-  duration: 14400
+  duration: "{{ network_duration|default('14400') }}"
   # Target network test speed in Mbps
-  #speed: 1000
+  speed: "{{ network_speed|default('0') }}"
 
 #RAID
 test_raid:
   # Test duration in seconds
-  duration: 14400
+  duration: "{{ raid_duration|default('14400') }}"

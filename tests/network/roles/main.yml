@@ -10,6 +10,16 @@
     enablerepo: epel
   loop: [ lts_ip, sut_ip ]
 
+#Required to run tests in parallel on opennebula
+- name: Ensures that the process <iperf3> is not running
+  shell: ps -aux|grep iperf3|wc -l
+  register: result
+  until: result.stdout|int <= 2
+  delegate_to: 127.0.0.1
+  retries: 1000
+  delay: 5
+  when: run_on_nebula is defined
+
 #Test
 - name: Test Network - run test
   local_action: command sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }}
@@ -25,3 +35,4 @@
       - iperf3
     state: removed
   loop: [ lts_ip, sut_ip ]
+  when: run_on_nebula is not defined

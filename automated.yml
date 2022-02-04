@@ -11,7 +11,7 @@
     - tags: logs_cleanup
       block:
         - name: Find logs
-          local_action: find paths=logs patterns="*.log"
+          local_action: find paths="{{ lts_logs_dir }}" patterns="*.log"
           register: find_logs
 
         - name: Cleanup logs
@@ -58,11 +58,6 @@
     - tags: network
       block:
         - include: "{{ lts_tests_dir }}/network/roles/main.yml"
-
-    #PXE
-    - tags: pxe
-      block:
-        - include: "{{ lts_tests_dir }}/pxe/roles/main.yml"
 
     #RAID
     - tags: raid

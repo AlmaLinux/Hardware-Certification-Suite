@@ -1,0 +1,9 @@
+---
+
+- hosts: localhost
+  strategy: linear
+  vars:
+    - ansible_python_interpreter: "{{ ans_py_interptr | default('/usr/bin/python2') }}"
+  user: root
+  roles:
+    - opennebula_actions
