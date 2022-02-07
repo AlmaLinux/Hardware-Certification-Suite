@@ -85,7 +85,7 @@ For example:
 
 Available tags:
 
-* logs_cleanup - clear logs folder
+* logs_folder - create logs folder
 * tests_copy - copy `~/hardware-certification/tests` folder from LTS to SUT
 * tests_cleanup - remove tests folder from SUT
 * containers - test

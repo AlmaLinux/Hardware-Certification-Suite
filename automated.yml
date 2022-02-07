@@ -8,17 +8,12 @@
   tasks:
 
     #GENERAL SETUP
-    - tags: logs_cleanup
+    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid]
       block:
-        - name: Find logs
-          local_action: find paths="{{ lts_logs_dir }}" patterns="*.log"
-          register: find_logs
+        - name: Create logs dir
+          local_action: file path="{{ lts_logs_dir }}" state="directory" mode="0755"
 
-        - name: Cleanup logs
-          local_action: file path="{{ item['path'] }}" state=absent
-          with_items: "{{ find_logs['files'] }}"
-
-    - tags: tests_copy
+    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid]
       block:
         - name: Copy tests
           copy:
@@ -67,7 +62,7 @@
     ##########
 
     #GENERAL CLEANUP
-    - tags: tests_cleanup
+    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid]
       block:
         - name: Remove tests
           file:
