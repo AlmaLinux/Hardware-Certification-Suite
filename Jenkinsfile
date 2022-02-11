@@ -121,7 +121,8 @@ timestamps {
             network_duration: '60',
             network_speed: '1000',
             raid_duration: '60',
-            phoronix_suites: 'ebizzy && echo "success"'
+            phoronix_suites: 'ebizzy && echo "success"',
+            ltp_suites: 'fork'
           ]
 
           stage("Create VM ${PLATFORM}") {
@@ -137,19 +138,15 @@ timestamps {
             dir("${env.WORKSPACE}") {
               ansiblePlaybook playbook: 'automated.yml', inventory: path_to_ansible_host, extraVars: run_opts
             }
-            // collects all appeared log names
-            dir("${env.WORKSPACE}/${ulf}") {
-              def files = findFiles(glob: '*.log')
-              files.each {
-                list_of_logs += it.name
-              }
-            }
-          }
 
-          stage("Run Phoronix ${PLATFORM}") {
+            dir("${env.WORKSPACE}") {
+              ansiblePlaybook playbook: 'automated.yml', inventory: path_to_ansible_host, extraVars: run_opts, tags: 'ltp'
+            }
+
             dir("${env.WORKSPACE}") {
               ansiblePlaybook playbook: 'automated.yml', inventory: path_to_ansible_host, extraVars: run_opts, tags: 'phoronix'
             }
+
             // collects all appeared log names
             dir("${env.WORKSPACE}/${ulf}") {
               def files = findFiles(glob: '*.log')
@@ -200,7 +197,7 @@ timestamps {
 
   node('Manage_Jenkins_c-projects') {
     stage("Matrix builds") {
-      timeout(time: 60, unit: 'MINUTES') {
+      timeout(time: 240, unit: 'MINUTES') {
         parallel(tasks)
       }
     }

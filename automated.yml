@@ -8,12 +8,12 @@
   tasks:
 
     #GENERAL SETUP
-    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, phoronix]
+    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
       block:
         - name: Create logs dir
           local_action: file path="{{ lts_logs_dir }}" state="directory" mode="0755"
 
-    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, phoronix]
+    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
       block:
         - name: Copy tests
           copy:
@@ -59,6 +59,11 @@
       block:
         - include: "{{ lts_tests_dir }}/raid/roles/main.yml"
 
+    #LTP
+    - tags: [ 'never', 'ltp']
+      block:
+        - include: "{{ lts_tests_dir }}/ltp/roles/main.yml"
+
     #PHORONIX
     - tags: [ 'never', 'phoronix' ]
       block:
@@ -67,7 +72,7 @@
     ##########
 
     #GENERAL CLEANUP
-    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, phoronix]
+    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
       block:
         - name: Remove tests
           file:

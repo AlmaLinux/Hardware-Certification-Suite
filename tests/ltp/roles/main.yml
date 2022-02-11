@@ -1,0 +1,87 @@
+---
+
+- name: TEST LTP - make sure there is no old LTP test files
+  file:
+    path: '{{ item }}'
+    state: absent
+  with_items:
+  - '{{ ltp_clone_path }}'
+  - /opt/ltp
+
+- name: TEST LTP - install packages
+  yum:
+    name:
+      - automake
+      - make
+      - gcc
+      - git
+      - asciidoc
+      - autoconf
+      - clang
+      - findutils
+      - iproute
+      - numactl-devel
+      - libtirpc
+      - libtirpc-devel
+      - perl-JSON
+      - perl-libwww-perl
+      - pkg-config
+      - pkgconf
+      - redhat-lsb-core
+      - libmnl-devel
+      - bison
+      - flex
+      - m4
+      - kernel-headers
+      - glibc-headers
+    state: present
+    update_cache: True
+
+- name: TEST LTP - clone repo
+  git:
+    repo: https://github.com/linux-test-project/ltp.git
+    dest: '{{ ltp_clone_path }}'
+    clone: yes
+    version: '20220121'
+
+- name: TEST LTP - compile
+  shell: "cd '{{ ltp_clone_path }}' ; make autotools ; ./configure >> /root/configure-ltp.log; make -j ; make install"
+  ignore_errors: true
+
+- name: TEST LTP - run
+  shell: "{{ sut_tests_dir }}/ltp/run_test.sh {{ test_ltp['suites'] }}"
+  register: output
+  ignore_errors: true
+
+- name: Test LTP - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/ltp.log"
+
+- name: TEST LTP - cleanup packages
+  yum:
+    name:
+      - automake
+      - make
+      - gcc
+      - git
+      - asciidoc
+      - autoconf
+      - clang
+      - findutils
+      - iproute
+      - numactl-devel
+      - libtirpc
+      - libtirpc-devel
+      - perl-JSON
+      - perl-libwww-perl
+      - pkg-config
+      - pkgconf
+      - redhat-lsb-core
+      - libmnl-devel
+      - bison
+      - flex
+      - m4
+      - kernel-headers
+      - glibc-headers
+    state: absent
+
+

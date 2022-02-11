@@ -29,3 +29,11 @@ test_raid:
 test_phoronix:
   # Test suites
   suites: "{{ phoronix_suites|default('database server server-memory disk kernel single-threaded') }}"
+
+#LTP
+# Path to clone LTP project to SUT
+ltp_clone_path: /root/ltp
+test_ltp:
+  suites: "{{ ltp_suites|default('all') }}"
+
+

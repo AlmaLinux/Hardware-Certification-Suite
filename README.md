@@ -83,6 +83,7 @@ Tests can be configured via `~/hardware-certification/vars.yml` file.
 * test_network['duration'] - Test duration in seconds
 * test_network['speed'] - Target network test speed in Mbps
 * test_raid['duration'] - Test duration in seconds
+* test_ltp['suites'] - Specify PATTERN to only run test cases which match PATTERN. By default all tests.
 
 Test tags
 ===
@@ -103,6 +104,7 @@ Available tags:
 * network - test
 * raid - test
 * phoronix - test suits (can only be run by tag)
+* ltp - tests (can only be run by tag)
 
 Interactive tests can't be run separately.
 
