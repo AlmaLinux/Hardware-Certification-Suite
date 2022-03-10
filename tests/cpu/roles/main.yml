@@ -1,6 +1,11 @@
 ---
 
-- name: Test cpu - setup
+- name: Test cpu - enable EPEL repo
+  yum:
+    name: epel-release
+    state: latest
+
+- name: Test cpu - install stress-ng
   yum:
     name: stress-ng
     state: latest
@@ -13,7 +18,12 @@
 - name: Test CPU - copy log
   local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/cpu.log"
 
-- name: Test CPU - cleanup
+- name: Test CPU - uninstall stress-ng
   yum:
     name: stress-ng
+    state: absent
+
+- name: Test CPU - uninstall EPEL repo
+  yum:
+    name: epel-release
     state: absent
