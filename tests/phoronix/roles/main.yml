@@ -1,7 +1,12 @@
 ---
 
 #Setup
-- name: Phoronix - setup
+- name: Phoronix - setup. Step 1\2
+  yum:
+    name:
+      - epel-release
+
+- name: Phoronix - setup. Step 2\2
   yum:
     name:
       - phoronix-test-suite
@@ -68,9 +73,15 @@
   with_items: "{{ json_reports.results }}"
 
 #Cleanup
-- name: Phoronix - cleanup
+- name: Phoronix - cleanup. Step 1\2
+  file:
+    path: '/etc/phoronix-test-suite.xml'
+    state: absent
+
+- name: Phoronix - cleanup. Step 2\2
   yum:
     name:
+      - epel-release
       - phoronix-test-suite
       - uuid-devel
       - snappy-devel
