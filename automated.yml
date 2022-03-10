@@ -5,6 +5,9 @@
   vars_files:
     - vars.yml
   ignore_errors: true
+  environment:
+    LANG: "en_US.UTF-8"
+    LC_ALL: "en_US.UTF-8"
   tasks:
 
     #GENERAL SETUP

@@ -2,24 +2,6 @@
 
 set -x
 
-prepare() {
-    echo "Installing docker..."
-    yum install docker -y 1>&2
-
-    which docker >> /dev/null
-    if [[ ! $? -eq 0 ]]; then
-        echo "Docker installation failed, aborting test"
-        return 1
-    fi
-
-    return 0
-}
-
-teardown() {
-    echo "Removing docker..."
-    yum remove docker -y 1>&2
-}
-
 wait_url_available() {
     attempts=5
     is_alternative="$1"
@@ -91,8 +73,6 @@ test_docker_network () {
 
 exit_code=0
 
-prepare || exit_code=$(( exit_code + 1 ))
-
 if [[ ${exit_code} -eq 0 ]]; then
     echo "++++++++++++++++++++++++++++++++"
     test_docker_containers || exit_code=$(( exit_code + 1 ))
@@ -100,7 +80,5 @@ if [[ ${exit_code} -eq 0 ]]; then
     test_docker_network || exit_code=$(( exit_code + 1 ))
     echo "++++++++++++++++++++++++++++++++"
 fi
-
-teardown || exit_code=$(( exit_code + 1 ))
 
 exit ${exit_code}

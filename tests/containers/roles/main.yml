@@ -1,8 +1,28 @@
 ---
 
+- name: Test Containers - install wget
+  yum:
+    name: docker
+    state: latest
+
+- name: Test Containers - install docker
+  yum:
+    name: wget
+    state: latest
+
 - name: Test Containers - run test
   shell: "{{ sut_tests_dir }}/containers/run_test.sh 2>&1"
   register: output
 
 - name: Test Containers - copy log
   local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/containers.log"
+
+- name: Test Containers - uninstall docker
+  yum:
+    name: docker
+    state: absent
+
+- name: Test Containers - uninstall wget
+  yum:
+    name: wget
+    state: absent
