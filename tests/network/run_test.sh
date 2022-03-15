@@ -110,7 +110,7 @@ iperf3_test() {
         fi
         # End progress icon
 
-        device_result=($(sut_command "cat /tmp/stress_testing_network_iperf3_client.log | grep -oP '\d+\.\d+ (?=Mbits/sec)' &2>/dev/null"))
+        device_result=($(sut_command "cat /tmp/stress_testing_network_iperf3_client.log | grep -oP '\d+ (?=Mbits/sec)' &2>/dev/null"))
         printf "[$(date)]\n|----------------------------------------------------------------|\n"
         success "$(sut_command 'cat /tmp/stress_testing_network_iperf3_client.log')"
         printf "|----------------------------------------------------------------|\n"
@@ -195,7 +195,7 @@ if [ "$global_result" == "true" ]; then
     sut_command 'service firewalld start > /dev/null 2>&1 &'
 fi
 
-info "For more information see: logs/network_testing.log"
+info "For more information see: logs/network.log"
 
 if [ "$global_result" == "true" ]; then
     success 'Test status: SUCCESS!'

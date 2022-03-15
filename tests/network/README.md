@@ -12,9 +12,7 @@ The network test uses the iperf3 tool.
 
 After the end of the test, the average data transfer rate and the maximum adapter speed are compared, and the percentage deviation from the maximum is calculated. The test is considered passed if the speed during the test did not drop below 80% and the average speed is above 80%.
 ### Running test automatically
-1. On LTS and SUT execute ansible role “/network/roles/setup”
-2. On LTS execute ansible role: /network/roles/test
-3. On LTS and SUT execute ansible role “/network/roles/cleanup”
+1. Execute ansible role “/network/roles/main”
 ### Manual running test
 1. On LTS and SUT run: yum install iperf3 sshpass ethtool net-tools
 2. On LTS run: /network/run_test.sh <LTS-host> <SUT-host> [test-time-in-minuts] [target-network-speed-in-Mbps]
