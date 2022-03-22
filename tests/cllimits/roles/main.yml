@@ -1,0 +1,39 @@
+---
+
+- name: Test lve/cagefs - install packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - fio
+    - epel-release
+    - cagefs
+    - lve-utils
+    - psmisc
+
+- name: Test lve/cagefs - install stress-ng
+  yum:
+    name: stress-ng
+    state: latest
+    enablerepo: epel
+
+- name: Initialize Cagefs
+  shell: "cagefsctl --init"
+
+- name: Test lve/cagefs - run test
+  shell: "{{ sut_tests_dir }}/cllimits/run_test.sh 2>&1"
+  register: output
+
+- name: Test lve/cagefs - copy log
+  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/cllimits.log"
+
+- name: Test lve/cagefs - install packages
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - fio
+    - epel-release
+    - cagefs
+    - stress-ng
+    - psmisc

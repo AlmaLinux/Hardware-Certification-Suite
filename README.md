@@ -105,6 +105,7 @@ Available tags:
 * raid - test
 * phoronix - test suits (can only be run by tag)
 * ltp - tests (can only be run by tag)
+* cllimits - test suits for lve/cagefs checkers (CL only)
 
 Interactive tests can't be run separately.
 

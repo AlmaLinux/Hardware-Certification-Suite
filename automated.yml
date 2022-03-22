@@ -11,12 +11,12 @@
   tasks:
 
     #GENERAL SETUP
-    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
+    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Create logs dir
           local_action: file path="{{ lts_logs_dir }}" state="directory" mode="0755"
 
-    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
+    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Copy tests
           copy:
@@ -72,10 +72,16 @@
       block:
         - include: "{{ lts_tests_dir }}/phoronix/roles/main.yml"
 
+    #lve limits/cagefs
+    - tags: cllimits
+      block:
+        - include: "{{ lts_tests_dir }}/cllimits/roles/main.yml"
+      when: ansible_distribution != 'AlmaLinux'
+
     ##########
 
     #GENERAL CLEANUP
-    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix]
+    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Remove tests
           file:
