@@ -84,6 +84,8 @@ Tests can be configured via `~/hardware-certification/vars.yml` file.
 * test_network['speed'] - Target network test speed in Mbps
 * test_raid['duration'] - Test duration in seconds
 * test_ltp['suites'] - Specify PATTERN to only run test cases which match PATTERN. By default all tests.
+* test_phoronix['suites'] - Define test cases
+* test_phoronix['folder'] - Specify a folder for installing tests and storing results
 
 Test tags
 ===
@@ -119,7 +121,11 @@ Example: `127.0.0.1 : ok=9 changed=7 unreachable=0 failed=0 skipped=0 rescued=0 
 
 TIPS
 ===
-Roles work in the context of the SUT, to run a command on the LTS, you need to run commands using `local_action`.
-
-Run command on the LTS: local_action
-Run command on the SUT: command, sh, etc.
+ 
+* Roles work in the context of the SUT, to run a command on the LTS, you need to run commands using `local_action`.    
+`Run command on the LTS: local_action`  
+`Run command on the SUT: command, sh, etc.` 
+* Before starting testing, you need to request information about the hardware. For example, it is not necessary to run a RAID test everywhere.
+* Notify in advance of the need to prepare the number of devices equal to the number of USB ports on the server to run the USB test.
+* Testing can be delayed, it is recommended to use the screen utility. For example `screen -L -S hctest`
+* For phoronix test, you need more than 100 gigabytes of space, by default it installs dependencies in the `/root` folder, to change the section, you need to change the `test_phoronix['folder']` in the `vars.yml` file.
