@@ -8,110 +8,113 @@
 - name: Phoronix - check space
   debug:
     msg: "You don't have enough free disk space to install all test dependencies.\nYou need more than 100 gb of free space.\nPlease change the path to the folder in variable test_phoronix['folder'] in file vars.yml."
-  when: df_output.stdout|int < 100
-  failed_when: df_output.stdout|int < 100
+  when: df_output.stdout|int < test_phoronix['need_space']|int
+  failed_when: df_output.stdout|int < test_phoronix['need_space']|int
 
-- block:
-  - name: Phoronix - setup. Step 1
-    yum:
-      name:
-        - epel-release
+- name: Phoronix - error log
+  local_action: copy content="Failed, don't have enough free disk space" dest="{{ lts_logs_dir }}/phoronix.log"
+  when: df_output.stdout|int < test_phoronix['need_space']|int
 
-  - name: Phoronix - setup. Step 2
-    yum:
-      name:
-        - phoronix-test-suite
-        - uuid-devel
-        - snappy-devel
-        - gflags-devel
-        - erlang
-        - opencl-headers
-        - glfw-devel
-        - yasm
-        - nasm
-        - p7zip
-        - p7zip-plugins
-        - meson
-        - opencv-devel
-        - google-benchmark-devel
-      enablerepo: powertools,epel-playground,epel
+- when: df_output.stdout|int > test_phoronix['need_space']|int
+  block:
+    - name: Phoronix - setup. Step 1
+      yum:
+        name: epel-release
+        state: latest
 
-  - name: Phoronix - copy config on SUT
-    copy:
-      src: "{{ lts_tests_dir }}/phoronix/sources/phoronix-test-suite.xml"
-      dest: "/etc/phoronix-test-suite.xml"
-      mode: 0777
+    - name: Phoronix - setup. Step 2
+      yum:
+        name:
+          - phoronix-test-suite
+          - uuid-devel
+          - snappy-devel
+          - gflags-devel
+          - erlang
+          - opencl-headers
+          - glfw-devel
+          - yasm
+          - nasm
+          - p7zip
+          - p7zip-plugins
+          - meson
+          - opencv-devel
+          - google-benchmark-devel
+        enablerepo: powertools,epel-playground,epel
 
-  - name: Phoronix - set folder path
-    replace:
-      path: /etc/phoronix-test-suite.xml
-      regexp: '~/'
-      replace: "{{ test_phoronix['folder'] }}/"
+    - name: Phoronix - copy config on SUT
+      copy:
+        src: "{{ lts_tests_dir }}/phoronix/sources/phoronix-test-suite.xml"
+        dest: "/etc/phoronix-test-suite.xml"
+        mode: 0777
 
-  #Test
-  - name: Phoronix - install & run tests
-    shell: "phoronix-test-suite batch-benchmark {{ test_phoronix['suites'] }} | tee /root/phoronix.tee.log"
-    register: output
+    - name: Phoronix - set folder path
+      replace:
+        path: /etc/phoronix-test-suite.xml
+        regexp: '~/'
+        replace: "{{ test_phoronix['folder'] }}/"
 
-  #UNRESOLVED DEPENDENCE
-  #phoronix-test-suite benchmark machine-learning
-  #phoronix-test-suite benchmark hpc
-  #phoronix-test-suite benchmark python
-  #phoronix-test-suite benchmark server-cpu-tests
-  #! scipy and sklearn = python-scikit-learn
+    #Test
+    - name: Phoronix - install & run tests
+      shell: "phoronix-test-suite batch-benchmark {{ test_phoronix['suites'] }} | tee /root/phoronix.tee.log"
+      register: output
 
-  - name: Phoronix - copy log
-    local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/phoronix.log"
+    #UNRESOLVED DEPENDENCE
+    #phoronix-test-suite benchmark machine-learning
+    #phoronix-test-suite benchmark hpc
+    #phoronix-test-suite benchmark python
+    #phoronix-test-suite benchmark server-cpu-tests
+    #! scipy and sklearn = python-scikit-learn
 
-  - name: Phoronix - get results
-    command: ls -1 {{ test_phoronix['folder'] }}/.phoronix-test-suite/test-results/
-    register: results
+    - name: Phoronix - copy log
+      local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/phoronix.log"
 
-  - name: Phoronix - convert results to PDF
-    shell: "phoronix-test-suite result-file-to-pdf {{ item }} | grep -oP '/(.*.pdf)' | sed 's/ //'"
-    with_items: "{{ results.stdout_lines }}"
-    register: pdf_reports
+    - name: Phoronix - get results
+      command: ls -1 {{ test_phoronix['folder'] }}/.phoronix-test-suite/test-results/
+      register: results
 
-  - name: Phoronix - convert results to JSON
-    shell: "phoronix-test-suite result-file-to-json {{ item }} | grep -oP '/(.*.json)' | sed 's/ //'"
-    with_items: "{{ results.stdout_lines }}"
-    register: json_reports
+    - name: Phoronix - convert results to PDF
+      shell: "phoronix-test-suite result-file-to-pdf {{ item }} | grep -oP '/(.*.pdf)' | sed 's/ //'"
+      with_items: "{{ results.stdout_lines }}"
+      register: pdf_reports
 
-  - name: Phoronix - copy PDF reports
-    fetch:
-      src: "{{ item.stdout }}"
-      dest: "{{ lts_logs_dir }}"
-    with_items: "{{ pdf_reports.results }}"
+    - name: Phoronix - convert results to JSON
+      shell: "phoronix-test-suite result-file-to-json {{ item }} | grep -oP '/(.*.json)' | sed 's/ //'"
+      with_items: "{{ results.stdout_lines }}"
+      register: json_reports
 
-  - name: Phoronix - copy JSON reports
-    fetch:
-      src: "{{ item.stdout }}"
-      dest: "{{ lts_logs_dir }}"
-    with_items: "{{ json_reports.results }}"
+    - name: Phoronix - copy PDF reports
+      fetch:
+        src: "{{ item.stdout }}"
+        dest: "{{ lts_logs_dir }}"
+      with_items: "{{ pdf_reports.results }}"
 
-  #Cleanup
-  - name: Phoronix - cleanup. Step 1
-    file:
-      path: '/etc/phoronix-test-suite.xml'
-      state: absent
+    - name: Phoronix - copy JSON reports
+      fetch:
+        src: "{{ item.stdout }}"
+        dest: "{{ lts_logs_dir }}"
+      with_items: "{{ json_reports.results }}"
 
-  - name: Phoronix - cleanup. Step 2
-    yum:
-      name:
-        - epel-release
-        - phoronix-test-suite
-        - uuid-devel
-        - snappy-devel
-        - gflags-devel
-        - erlang
-        - opencl-headers
-        - glfw-devel
-        - yasm
-        - nasm
-        - p7zip
-        - p7zip-plugins
-        - meson
-        - opencv-devel
-        - google-benchmark-devel
-      state: removed
-  when: df_output.stdout|int > 100
+    #Cleanup
+    - name: Phoronix - cleanup. Step 1
+      file:
+        path: '/etc/phoronix-test-suite.xml'
+        state: absent
+
+    - name: Phoronix - cleanup. Step 2
+      yum:
+        name:
+          - phoronix-test-suite
+          - uuid-devel
+          - snappy-devel
+          - gflags-devel
+          - erlang
+          - opencl-headers
+          - glfw-devel
+          - yasm
+          - nasm
+          - p7zip
+          - p7zip-plugins
+          - meson
+          - opencv-devel
+          - google-benchmark-devel
+        state: removed

@@ -30,6 +30,7 @@ test_phoronix:
   # Test suites
   suites: "{{ phoronix_suites|default('database server server-memory disk kernel single-threaded') }}"
   folder: "{{ phoronix_folder|default('/root') }}"
+  need_space: "{{ phoronix_need_space|default(100) }}"
 
 #LTP
 # Path to clone LTP project to SUT

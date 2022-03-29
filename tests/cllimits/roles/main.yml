@@ -2,14 +2,13 @@
 
 - name: Test lve/cagefs - install packages
   yum:
-    name: "{{ item }}"
+    name:
+      - fio
+      - epel-release
+      - cagefs
+      - lve-utils
+      - psmisc
     state: latest
-  with_items:
-    - fio
-    - epel-release
-    - cagefs
-    - lve-utils
-    - psmisc
 
 - name: Test lve/cagefs - install stress-ng
   yum:
@@ -27,13 +26,11 @@
 - name: Test lve/cagefs - copy log
   local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/cllimits.log"
 
-- name: Test lve/cagefs - install packages
+- name: Test lve/cagefs - uninstall packages
   yum:
-    name: "{{ item }}"
+    name:
+      - fio
+      - cagefs
+      - stress-ng
+      - psmisc
     state: absent
-  with_items:
-    - fio
-    - epel-release
-    - cagefs
-    - stress-ng
-    - psmisc

@@ -122,6 +122,8 @@ timestamps {
             network_speed: '1000',
             raid_duration: '60',
             phoronix_suites: 'ebizzy && echo "success"',
+            phoronix_folder: '/root',
+            phoronix_need_space: '1',
             ltp_suites: 'fork'
           ]
 
