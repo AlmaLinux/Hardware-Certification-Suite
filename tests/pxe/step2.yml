@@ -1,0 +1,52 @@
+---
+- name: PXE - Check
+  hosts: all
+  vars_files:
+    - ../../vars.yml
+  ignore_errors: true
+
+  vars_prompt:
+  - name: check
+    prompt: "Were you able to boot the PXE menu? y/n"
+    private: false
+
+  tasks:
+    - when: check == 'y'
+      block:
+        - name: Check result
+          shell: "cat /var/log/messages | grep 'finished pxelinux.cfg/default'"
+          register: pxe_loaded
+
+        - when: pxe_loaded.rc == 0
+          debug:
+            msg: "Test passed"
+
+        - when: pxe_loaded.rc != 0
+          debug:
+            msg: "Test failed, pxe didn't start"
+          failed_when: true
+
+    - when: check != 'y'
+      block:
+        - name: Check result
+          debug:
+            msg: "Test failed"
+          failed_when: true
+
+    - name: PXE - remove packages
+      yum:
+        name:
+          - tftp
+          - tftp-server
+          - dhcp-server
+          - syslinux
+        state: absent
+
+    - name: PXE - remove fodlers
+      file:
+        path:
+          - /var/lib/tftpboot/
+          - /etc/dhcp/
+          - /etc/systemd/system/tftp-server.service
+          - /etc/systemd/system/tftp-server.socket
+        state: absent

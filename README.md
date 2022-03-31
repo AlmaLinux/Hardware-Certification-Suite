@@ -38,11 +38,9 @@ Create your test directory in the `~/hardware-certification/tests` folder, for e
 **Test directory structure for interactive tests**
 
 |- tests/example  
-|-- roles  
-|--- main.yml - Ansible tasks    
-|-- example_playbook_step1.yml - sub playbook with interactive prompts  
-|-- example_playbook_step2.yml - sub playbook with interactive prompts  
-|-- example_playbook_step3.yml - sub playbook with interactive prompts  
+|-- step1.yml - sub playbook with interactive prompts  
+|-- step2.yml - sub playbook with interactive prompts  
+|-- stepx.yml - sub playbook with interactive prompts  
 |-- README.md - instructions for working with the test when manually launched
 
 Each automated test should store test results and utility output in a file `name`.log in the root directory of the repository `~/hardware-certification/logs/`. You can get the folder path from a variable `{{ lts_logs_dir }}`.

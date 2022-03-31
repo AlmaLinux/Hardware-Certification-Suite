@@ -20,7 +20,10 @@
       msg: 'Your input: {{ usb_count.stdout }}'
     failed_when: usb_count.stdout == '0'
 
-  - include: roles/setup.yml
+  - name: USB test - install dependent software
+    yum:
+      name: usbutils
+      state: latest
 
   - name: Detecting USB devices
     command: lsusb

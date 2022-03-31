@@ -85,5 +85,5 @@
       block:
         - name: Remove tests
           file:
-            state: absent
             path: "{{ sut_tests_dir }}"
+            state: absent

@@ -1,0 +1,139 @@
+---
+- name: PXE - Setup
+  hosts: all
+  vars_files:
+    - ../../vars.yml
+    - vars.yml
+  ignore_errors: true
+
+  vars_prompt:
+  - name: dhcp_subnet
+    prompt: "DHCP Subnet"
+    private: false
+    default: "{{ dhcp_subnet_default }}"
+  - name: dhcp_netmask
+    prompt: "DHCP Netmask"
+    private: false
+    default: "{{ dhcp_netmask_default }}"
+  - name: dhcp_broadcast
+    prompt: "DHCP Broadcast address"
+    private: false
+    default: "{{ dhcp_broadcast_default }}"
+  - name: dhcp_bootip_from
+    prompt: "DHCP Dynamic bootp from ip"
+    private: false
+    default: "{{ dhcp_bootip_from_default }}"
+  - name: dhcp_bootip_to
+    prompt: "DHCP Dynamic bootp to ip"
+    private: false
+    default: "{{ dhcp_bootip_to_default }}"
+  - name: dhcp_server
+    prompt: "DHCP Next server"
+    private: false
+    default: "{{ dhcp_server_default }}"
+  - name: install_cl
+    prompt: "Install CL8? (y/n)"
+    private: false
+    default: "n"
+
+  tasks:
+  - name: PXE - install packages
+    yum:
+      name:
+        - tftp
+        - tftp-server
+        - dhcp-server
+        - syslinux
+        - rsyslog
+      state: latest
+
+  - name: PXE - copy dhcp conf
+    copy:
+      src: "./sources/dhcpd.conf"
+      dest: "/etc/dhcp/dhcpd.conf"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#subnet#'
+      replace: "{{ dhcp_subnet }}"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#netmask#'
+      replace: "{{ dhcp_netmask }}"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#broadcast#'
+      replace: "{{ dhcp_broadcast }}"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#bootip_from#'
+      replace: "{{ dhcp_bootip_from }}"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#bootip_to#'
+      replace: "{{ dhcp_bootip_to }}"
+  - replace:
+      path: "/etc/dhcp/dhcpd.conf"
+      regexp: '#server#'
+      replace: "{{ dhcp_server }}"
+
+  - name: PXE - install tftp
+    copy:
+      src: "./sources/tftp-server.service"
+      dest: "/etc/systemd/system/tftp-server.service"
+      force: no
+  - copy:
+      src: "/usr/lib/systemd/system/tftp.socket"
+      dest: "/etc/systemd/system/tftp-server.socket"
+      force: no
+
+  - name: PXE - config tftpboot
+    copy:
+      src: "/usr/share/syslinux/pxelinux.0"
+      dest: "/var/lib/tftpboot/pxelinux.0"
+  - copy:
+      src: "/usr/share/syslinux/ldlinux.c32"
+      dest: "/var/lib/tftpboot/ldlinux.c32"
+  - copy:
+      src: "/usr/share/syslinux/menu.c32"
+      dest: "/var/lib/tftpboot/menu.c32"
+  - copy:
+      src: "/usr/share/syslinux/libutil.c32"
+      dest: "/var/lib/tftpboot/libutil.c32"
+  - when: install_cl == "y"
+    get_url:
+      url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/vmlinuz"
+      dest: "/var/lib/tftpboot/vmlinuz"
+  - when: install_cl == "y"
+    get_url:
+      url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/initrd.img"
+      dest: "/var/lib/tftpboot/initrd.img"
+
+  - name: PXE - menu
+    file:
+      path: "/var/lib/tftpboot/pxelinux.cfg"
+      state: directory
+  - copy:
+      src: "./sources/default"
+      dest: "/var/lib/tftpboot/pxelinux.cfg/default"
+
+  - name: PXE - restart systemd
+    systemd:
+      daemon_reload: yes
+  - command: systemctl enable --now tftp-server
+  - systemd:
+      name: tftp
+      state: restarted
+  - systemd:
+      name: dhcpd
+      state: restarted
+  - name: PXE - clear messages log
+    file:
+      path: /var/log/messages
+      state: absent
+  - systemd:
+      name: rsyslog
+      state: restarted
+  - firewalld:
+      service: tftp
+      permanent: yes
+      state: enabled

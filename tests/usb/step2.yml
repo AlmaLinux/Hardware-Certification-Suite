@@ -15,7 +15,10 @@
     command: lsusb
     register: lsusb_output_after
 
-  - include: roles/cleanup.yml
+  - name: USB test - remove dependent software
+    yum:
+      name: usbutils
+      state: absent
 
   - name: Searching USB devices info
     debug:
