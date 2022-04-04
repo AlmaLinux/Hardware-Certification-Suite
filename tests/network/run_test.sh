@@ -3,8 +3,8 @@
 set +ex
 
 if [ $# -lt 2 ]; then
-	echo "usage: $0 <LTS-host> <SUT-host> [test-time-in-minuts] [target-network-speed] [disable-preloader]"
-	exit 1
+    echo "usage: $0 <LTS-host> <SUT-host> [test-time-in-minuts] [target-network-speed] [disable-preloader]"
+    exit 1
 fi
 
 LTS_HOST=$1
@@ -12,6 +12,7 @@ SUT_HOST=$2
 TEST_TIME=${3-14400}
 TARGET_SPEED=${4-false}
 PRELOADER=${5-false}
+NETWORK_DEVICE=${6}
 
 ALLOWED_PERCENTAGE=0.8
 global_result=true
@@ -137,7 +138,11 @@ if [ "$(echo $LANG | grep -oP '\w{2}(?=_)')" != "en" ] || [ "$(sut_command "echo
 fi
 
 # Catching network devices
-network_devices=( $(sut_command "lshw -class network | grep -oP 'logical name: (\w+)' | sed 's/logical name: //'") )
+if [ -z "$NETWORK_DEVICE" ]; then
+  network_devices=( $(sut_command "lshw -class network | grep -oP 'logical name: (\w+)' | sed 's/logical name: //'") )
+else
+  network_devices=( $NETWORK_DEVICE )
+fi
 
 if [ "$global_result" == "true" ]; then
     for i in ${!network_devices[@]}; do
