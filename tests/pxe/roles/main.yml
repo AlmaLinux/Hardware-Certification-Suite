@@ -1,4 +1,0 @@
----
-
-- name: Test PXE
-  local_action: copy content="demo" dest="{{ lts_logs_dir }}/pxe.log"

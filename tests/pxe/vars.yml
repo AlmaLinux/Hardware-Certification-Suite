@@ -1,0 +1,8 @@
+---
+
+dhcp_subnet_default: 192.168.56.0
+dhcp_netmask_default: 255.255.255.0
+dhcp_broadcast_default: 192.168.56.255
+dhcp_bootip_from_default: 192.168.56.200
+dhcp_bootip_to_default: 192.168.56.240
+dhcp_server_default: 192.168.56.101

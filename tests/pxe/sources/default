@@ -1,0 +1,15 @@
+DEFAULT menu.c32
+TIMEOUT 300
+PROMPT 0
+ONTIMEOUT LOCAL
+
+MENU TITLE ########## PXE Boot Menu ##########
+
+LABEL LOCAL
+    MENU LABEL ^1) PXE boot work's, test passed.
+    LOCALBOOT 0
+
+LABEL REPO
+    MENU LABEL ^2) Install CL8
+    KERNEL vmlinuz
+    APPEND initrd=initrd.img method=https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os devfs=nomount ip=dhcp
