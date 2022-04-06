@@ -19,6 +19,8 @@ test_network:
   duration: "{{ network_duration|default('14400') }}"
   # Target network test speed in Mbps
   speed: "{{ network_speed|default('0') }}"
+  # Testing a special device
+  device: "{{ network_device|default('') }}"
 
 #RAID
 test_raid:
@@ -28,7 +30,7 @@ test_raid:
 #PHORONIX
 test_phoronix:
   # Test suites
-  suites: "{{ phoronix_suites|default('database server server-memory disk kernel single-threaded') }}"
+  suites: "{{ phoronix_suites|default('pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache-1.7.2 pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench') }}"
   folder: "{{ phoronix_folder|default('/root') }}"
   need_space: "{{ phoronix_need_space|default(100) }}"
 

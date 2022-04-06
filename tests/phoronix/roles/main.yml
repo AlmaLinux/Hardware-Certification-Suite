@@ -39,6 +39,8 @@
           - meson
           - opencv-devel
           - google-benchmark-devel
+          - expat-devel
+          - dejavu-sans-fonts
         enablerepo: powertools,epel-playground,epel
 
     - name: Phoronix - copy config on SUT
@@ -117,4 +119,5 @@
           - meson
           - opencv-devel
           - google-benchmark-devel
+          - expat-devel
         state: removed

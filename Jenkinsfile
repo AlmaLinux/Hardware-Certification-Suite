@@ -120,6 +120,7 @@ timestamps {
             cpu_duration: '1m',
             network_duration: '60',
             network_speed: '1000',
+            network_device: '',
             raid_duration: '60',
             phoronix_suites: 'ebizzy && echo "success"',
             phoronix_folder: '/root',

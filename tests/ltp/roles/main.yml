@@ -82,6 +82,7 @@
       - m4
       - kernel-headers
       - glibc-headers
+    skip_broken: yes
     state: absent
 
 
