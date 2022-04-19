@@ -80,6 +80,7 @@ Tests can be configured via `~/hardware-certification/vars.yml` file.
 * test_cpu['duration'] - stop stress test after T seconds. You can specify time units in seconds, minutes, hours, days, or years with the s, m, h, d, or y suffix. If the timeout is 0, the test will run forever.
 * test_network['duration'] - Test duration in seconds
 * test_network['speed'] - Target network test speed in Mbps
+* test_network['device'] - Testing a specific network device
 * test_raid['duration'] - Test duration in seconds
 * test_ltp['suites'] - Specify PATTERN to only run test cases which match PATTERN. By default all tests.
 * test_phoronix['suites'] - Define test cases

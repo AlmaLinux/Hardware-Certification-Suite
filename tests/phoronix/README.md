@@ -1,12 +1,15 @@
 ## Phoronix test suits
 The test can be run via ansible only with tag "phoronix" or manual.
 The test installs and runs the Phoronix test suite with the following test suites:
-- database
-- server
-- server-memory
-- disk
-- kernel
-- single-threaded
+- pts/sqlite-speedtest
+- pts/php
+- pts/redis
+- pts/nginx
+- pts/apache
+- pts/sqlite
+- pts/openssl
+- pts/compress-gzip
+- pts/glibc-bench
 
 After the end of the tests, PDF and JSON reports are generated and copied to the logs folder.
 ### Running test automatically
@@ -18,15 +21,15 @@ Instal all dependencies on SUT:
 
 Noninteractive mode:
 
-On SUT run: `phoronix-test-suite batch-benchmark database server server-memory disk kernel single-threaded`
+On SUT run: `phoronix-test-suite batch-benchmark pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench`
 
 Interactive mode:
 
-On SUT run: `phoronix-test-suite benchmark database server server-memory disk kernel single-threaded`
+On SUT run: `phoronix-test-suite benchmark pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench`
 
 Debug mode: 
 
-On SUT run: `phoronix-test-suite debug-benchmark  database server server-memory disk kernel single-threaded`
+On SUT run: `phoronix-test-suite debug-benchmark pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench`
 
 ### Manual convert reports to PDF
 
