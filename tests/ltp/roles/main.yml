@@ -36,6 +36,7 @@
       - glibc-headers
     state: present
     update_cache: True
+    enablerepo: powertools
 
 - name: TEST LTP - clone repo
   git:
