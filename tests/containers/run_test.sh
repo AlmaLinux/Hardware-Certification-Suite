@@ -29,8 +29,8 @@ wait_url_available() {
 test_docker_containers() {
     echo "Checking that docker is able to create containers."
     echo "Downloading and starting busybox container"
-    docker run --name=testhttpd -p 127.0.0.1:80:80/tcp \
-        --rm busybox sh -c "echo 'hello world' > /var/www/test.html && httpd -f -p 80 -h /var/www" &
+    docker run -d --name=testhttpd -p 127.0.0.1:80:80/tcp \
+        --rm busybox sh -c "echo 'hello world' > /var/www/test.html && httpd -f -p 80 -h /var/www"
 
     wait_url_available
     rc=$?
@@ -54,8 +54,8 @@ test_docker_network () {
     echo "Starting multiple containers in same network"
     docker network create test-net 1>&2
 
-    docker run --net test-net --name testnetwork \
-        --rm busybox sh -c "echo 'hello world' > /var/www/test.html && httpd -f -p 80 -h /var/www" 1>&2 &
+    docker run -d --net test-net --name testnetwork \
+        --rm busybox sh -c "echo 'hello world' > /var/www/test.html && httpd -f -p 80 -h /var/www" 1>&2
 
     wait_url_available 1 '_check_connection_in_container'
     rc=$?
