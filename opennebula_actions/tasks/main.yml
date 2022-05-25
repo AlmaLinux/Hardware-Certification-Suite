@@ -62,8 +62,13 @@
     hard: yes
   when: one_act == 'rmvm'
 
-- wait_for_connection:
-    timeout: 180
-  delegate_to: '{{ item.networks[0].ip }}'
+- name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
+  wait_for:
+    port: 22
+    host: '{{ item.networks[0].ip }}'
+    search_regex: OpenSSH
+    delay: 10
   with_items: "{{ created_vm.instances }}"
+  connection: local
   when: one_act == 'crt'
+
