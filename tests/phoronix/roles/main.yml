@@ -31,7 +31,6 @@
           - gflags-devel
           - erlang
           - opencl-headers
-          - glfw-devel
           - yasm
           - nasm
           - p7zip
@@ -42,6 +41,13 @@
           - expat-devel
           - dejavu-sans-fonts
         enablerepo: powertools,epel-playground,epel
+
+    - name: Phoronix - setup. Step 2.a
+      yum:
+        name:
+          - glfw-devel
+        enablerepo: powertools,epel-playground,epel
+      when: ansible_architecture == "x86_64"
 
     - name: Phoronix - copy config on SUT
       copy:
