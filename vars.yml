@@ -12,7 +12,7 @@ sut_tests_dir: "./hc-tests"
 #CPU
 test_cpu:
   # Test duration seconds, minutes, hours, days, or years with the s, m, h, d, or y suffix.
-  duration: "{{ cpu_duration|default('30m') }}"
+  duration: "{{ cpu_duration|default('4h') }}"
 
 #Network
 test_network:
