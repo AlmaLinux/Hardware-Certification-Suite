@@ -2,11 +2,10 @@
 #GENERAL
 _ssh_connection: "{{ hostvars[inventory_hostname]['ansible_env'].SSH_CONNECTION }}"
 work_dir: '/home/AlmaLinux_CertSuite/'
-unique_logs_dir: "{{ work_dir + '/logs/' }}"
+unique_logs_folder: "{{ work_dir + '/logs/' }}"
 lts_ip: "{{ _ssh_connection.split(' ')[0] }}"
 lts_tests_dir: "./tests"
-logs_dir_prefix: "{{ unique_logs_dir|default('./logs/') }}"
-lts_logs_dir: "{{ logs_dir_prefix + ansible_date_time.iso8601 }}"
+lts_logs_dir: "{{ unique_logs_folder|default('./logs/') + ansible_date_time.iso8601 }}"
 sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
 sut_tests_dir: "./hc-tests/"
 
