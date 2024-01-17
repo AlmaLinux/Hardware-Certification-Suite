@@ -32,12 +32,12 @@ test_raid:
 test_phoronix:
   # Test suites
   suites: "{{ phoronix_suites|default('pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench') }}"
-  folder: "{{ phoronix_folder|default(local_dir_prefix + '/HCS') }}"
+  folder: "{{ phoronix_folder|default(work_dir + '/phoronix') }}"
   need_space: "{{ phoronix_need_space|default(100) }}"
 
 #LTP
 # Path to clone LTP project to SUT
-ltp_clone_path: "{{ local_dir_prefix + '/ltp' }}"
+ltp_clone_path: "{{ work_dir + '/ltp' }}"
 test_ltp:
   suites: "{{ ltp_suites|default('all') }}"
 
