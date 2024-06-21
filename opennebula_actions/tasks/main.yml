@@ -1,12 +1,12 @@
 ---
 
 - name: Create vm
-  one_vm:
+  community.general.one_vm:
     api_password: "{{ apipassword }}"
     api_url: "{{ apiurl }}"
     api_username: "{{ apiusername }}"
     template_id: "{{ TEMPLATE_ID }}"
-    #disk_size: "{{ vm_disk_size | default('30') }} GB"
+    # disk_size: "{{ vm_disk_size | default('30') }} GB"
     memory: 4 GB
     cpu: 4
     vcpu: 4
@@ -16,54 +16,58 @@
   register: created_vm
   when: one_act == 'crt'
 
-- name: ansible hosts add
-  lineinfile:
+- name: Ansible hosts add
+  ansible.builtin.lineinfile:
     path: ./ansible_hosts{{ machine_info | default('') }}
     line: '{{ item.networks[0].ip }}'
-    create: yes
+    create: true
+    mode: "0644"
   with_items: "{{ created_vm.instances }}"
   when: one_act == 'crt'
 
-- name: vm id add
-  lineinfile:
+- name: Vm id add
+  ansible.builtin.lineinfile:
     path: ./vm_id{{ machine_info | default('') }}
     line: '{{ created_vm.instances_ids }}'
-    create: yes
+    create: true
+    mode: "0644"
   when: one_act == 'crt'
 
 - name: Read vmid
-  shell: tail -n 1 ./vm_id{{ machine_info | default('') }}
+  ansible.builtin.command: tail -n 1 ./vm_id{{ machine_info | default('') }}
   register: vmid
   when: (one_act == 'hrbt' or one_act == 'rmvm')
+  changed_when: false
 
 - name: Read rebooted_status
-  shell: tail -n 1 ./rebooted_status{{ machine_info | default('') }}
+  ansible.builtin.command: tail -n 1 ./rebooted_status{{ machine_info | default('') }}
   register: rbt_stat
   when: one_act == 'hrbt'
+  changed_when: false
 
-- name: Hard reboot vm
-  one_vm:
+- name: Hard reboot vm # noqa ignore-errors
+  community.general.one_vm:
     api_password: "{{ apipassword }}"
     api_url: "{{ apiurl }}"
     api_username: "{{ apiusername }}"
-    instance_ids: '{{ vmid.stdout }}'
+    instance_ids: '{{ vmid.stdout | int }}'
     state: rebooted
-    hard: yes
-  ignore_errors: yes
-  when: (one_act == 'hrbt' and rbt_stat.stdout|bool == true)
+    hard: true
+  ignore_errors: true
+  when: (one_act == 'hrbt' and rbt_stat.stdout | bool)
 
 - name: Remove vm
-  one_vm:
+  community.general.one_vm:
     api_password: "{{ apipassword }}"
     api_url: "{{ apiurl }}"
     api_username: "{{ apiusername }}"
-    instance_ids: '{{ vmid.stdout }}'
+    instance_ids: '{{ vmid.stdout | int }}'
     state: absent
-    hard: yes
+    hard: true
   when: one_act == 'rmvm'
 
 - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
-  wait_for:
+  ansible.builtin.wait_for:
     port: 22
     host: '{{ item.networks[0].ip }}'
     search_regex: OpenSSH
@@ -71,4 +75,3 @@
   with_items: "{{ created_vm.instances }}"
   connection: local
   when: one_act == 'crt'
-

@@ -1,30 +1,33 @@
 ---
 
-#Setup
+# Setup
 - name: Tast Raid - install dependent software
-  yum:
+  package:
     name:
       - mdadm
       - fio
 
-#Necessary settings before running tests on opennebula
+# Necessary settings before running tests on opennebula
 - name: remember current vd
-  shell: df -h|grep 'dev/vd'|awk '{print $1}'
+  ansible.builtin.shell: df -h|grep 'dev/vd'|awk '{print $1}'
   register: current
   when: run_on_nebula is defined
 
 - name: returns vds for raid
-  shell: "count=0; m=('/dev/vda1' '/dev/vdb1' '/dev/vdc1'); for i in ${m[@]}; do test {{ current.stdout }} == ${m[$count]} && unset m[$count]; ((count=count+1)); done; echo ${m[@]}"
+  ansible.builtin.shell:
+    "count=0; m=('/dev/vda1' '/dev/vdb1' '/dev/vdc1'); for i in ${m[@]};
+    do test {{ current.stdout }} == ${m[$count]} && unset m[$count]; ((count=count+1)); done;
+    echo ${m[@]}"
   register: result
   when: run_on_nebula is defined
 
 - name: vd1
-  shell: "echo {{ result.stdout }}|awk '{print $1}'"
+  ansible.builtin.shell: "echo {{ result.stdout }}|awk '{print $1}'"
   register: vd1
   when: run_on_nebula is defined
 
 - name: vd2
-  shell: "echo {{ result.stdout }}|awk '{print $2}'"
+  ansible.builtin.shell: "echo {{ result.stdout }}|awk '{print $2}'"
   register: vd2
   when: run_on_nebula is defined
 
@@ -33,23 +36,23 @@
   when: run_on_nebula is defined
 
 - name: configure raid
-  expect:
+  ansible.builtin.expect:
     command: "mdadm --create /dev/md0 --level=1 --raid-devices=2 {{ vd1.stdout }} {{ vd2.stdout }}"
     responses:
       "Continue creating array?": "y\r"
   when: run_on_nebula is defined
 
-#Test
+# Test
 - name: Tast Raid - run test
-  shell: "{{ sut_tests_dir }}/raid/run_test.sh {{ test_raid['duration'] }} disable-preloader"
+  ansible.builtin.shell: "{{ sut_tests_dir }}/raid/run_test.sh {{ test_raid['duration'] }} disable-preloader"
   register: output
 
 - name: Tast Raid - copy log
   local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/raid.log"
 
-#Cleaup
+# Cleaup
 - name: Tast Raid - cleanup
-  yum:
+  package:
     name:
       - fio
     state: removed

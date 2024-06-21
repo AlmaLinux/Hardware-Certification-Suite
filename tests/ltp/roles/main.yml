@@ -5,8 +5,8 @@
     path: '{{ item }}'
     state: absent
   with_items:
-  - '{{ ltp_clone_path }}'
-  - /opt/ltp
+    - '{{ ltp_clone_path }}'
+    - /opt/ltp
 
 - name: TEST LTP - install packages
   yum:
@@ -35,14 +35,14 @@
       - kernel-headers
       - glibc-headers
     state: present
-    update_cache: True
+    update_cache: true
     enablerepo: powertools
 
 - name: TEST LTP - clone repo
   git:
     repo: https://github.com/linux-test-project/ltp.git
     dest: '{{ ltp_clone_path }}'
-    clone: yes
+    clone: true
     version: '20220121'
 
 - name: TEST LTP - compile
@@ -83,7 +83,5 @@
       - m4
       - kernel-headers
       - glibc-headers
-    skip_broken: yes
+    skip_broken: true
     state: absent
-
-

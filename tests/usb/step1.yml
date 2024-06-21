@@ -6,35 +6,39 @@
   ignore_errors: true
 
   vars_prompt:
-  - name: usb_cnt
-    prompt: "USB test.\n\nBefore starting disconnect all devices from all USB ports under test.\nInput the number of USB ports for the test (exclude keyboard port).\n\nNumber of ports"
-    private: false
+    - name: usb_cnt
+      prompt:
+        "USB test.\n\nBefore starting disconnect all devices from all USB ports under test.\n
+        Input the number of USB ports for the test (exclude keyboard port).\n\nNumber of ports"
+      private: false
 
   tasks:
-  - name: Saving count USB ports to test
-    command: 'echo {{ usb_cnt|int }}'
-    register: usb_count
+    - name: Saving count USB ports to test
+      ansible.builtin.command: 'echo {{ usb_cnt | int }}'
+      register: usb_count
+      changed_when: false
 
-  - name: Checking your input
-    debug:
-      msg: 'Your input: {{ usb_count.stdout }}'
-    failed_when: usb_count.stdout == '0'
+    - name: Checking your input
+      ansible.builtin.debug:
+        msg: 'Your input: {{ usb_count.stdout }}'
+      failed_when: usb_count.stdout == '0'
 
-  - name: USB test - install dependent software
-    yum:
-      name: usbutils
-      state: latest
+    - name: USB test - install dependent software # noqa package-latest
+      ansible.builtin.package:
+        name: usbutils
+        state: latest
 
-  - name: Detecting USB devices
-    command: lsusb
-    register: lsusb_output_before
+    - name: Detecting USB devices
+      ansible.builtin.command: lsusb
+      register: lsusb_output_before
+      changed_when: false
 
-  - name: Searching USB devices info
-    debug:
-      msg: '{{ lsusb_output_before.stdout }}'
-    when: lsusb_output_before.rc == 0
+    - name: Searching USB devices info
+      ansible.builtin.debug:
+        msg: '{{ lsusb_output_before.stdout }}'
+      when: lsusb_output_before.rc == 0
 
-  - name: Searching USB devices info
-    debug:
-      msg: 'USB devices not found.'
-    when: lsusb_output_before.rc != 0
+    - name: Searching USB devices info
+      ansible.builtin.debug:
+        msg: 'USB devices not found.'
+      when: lsusb_output_before.rc != 0

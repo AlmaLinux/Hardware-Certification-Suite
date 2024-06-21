@@ -27,8 +27,6 @@
       <model type='vga' vram='16384' heads='1'/>
       <driver name='qemu'/>
     </video>
-    <graphics type='spice' port='-1' tlsPort='-1' autoport='yes'>
-      <channel name='main' mode='insecure'/>
-    </graphics>
+    <graphics type='vnc' port='-1' autoport='yes'/>
   </devices>
 </domain>
