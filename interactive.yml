@@ -1,9 +1,13 @@
 ---
 
-#USB
-- import_playbook: tests/usb/step1.yml
-- import_playbook: tests/usb/step2.yml
+# USB
+- name: USB step 1
+  import_playbook: tests/usb/step1.yml
+- name: USB step 2
+  import_playbook: tests/usb/step2.yml
 
-#PXE
-- import_playbook: tests/pxe/step1.yml
-- import_playbook: tests/pxe/step2.yml
+# PXE
+- name: PXE step 1
+  import_playbook: tests/pxe/step1.yml
+- name: PXE step 2
+  import_playbook: tests/pxe/step2.yml

@@ -5,4 +5,7 @@
   register: output
 
 - name: Test Hardware Detection - copy log
-  local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/hw_detection.log"
+  ansible.builtin.copy:
+    content: "{{ output.stdout }}"
+    dest: "{{ lts_logs_dir }}/hw_detection.log"
+  delegate_to: localhost

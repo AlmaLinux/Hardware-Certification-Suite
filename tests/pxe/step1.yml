@@ -7,133 +7,165 @@
   ignore_errors: true
 
   vars_prompt:
-  - name: dhcp_subnet
-    prompt: "DHCP Subnet"
-    private: false
-    default: "{{ dhcp_subnet_default }}"
-  - name: dhcp_netmask
-    prompt: "DHCP Netmask"
-    private: false
-    default: "{{ dhcp_netmask_default }}"
-  - name: dhcp_broadcast
-    prompt: "DHCP Broadcast address"
-    private: false
-    default: "{{ dhcp_broadcast_default }}"
-  - name: dhcp_bootip_from
-    prompt: "DHCP Dynamic bootp from ip"
-    private: false
-    default: "{{ dhcp_bootip_from_default }}"
-  - name: dhcp_bootip_to
-    prompt: "DHCP Dynamic bootp to ip"
-    private: false
-    default: "{{ dhcp_bootip_to_default }}"
-  - name: dhcp_server
-    prompt: "DHCP Next server"
-    private: false
-    default: "{{ dhcp_server_default }}"
-  - name: install_cl
-    prompt: "Install CL8? (y/n)"
-    private: false
-    default: "n"
+    - name: dhcp_subnet
+      prompt: "DHCP Subnet"
+      private: false
+      default: "{{ dhcp_subnet_default }}"
+    - name: dhcp_netmask
+      prompt: "DHCP Netmask"
+      private: false
+      default: "{{ dhcp_netmask_default }}"
+    - name: dhcp_broadcast
+      prompt: "DHCP Broadcast address"
+      private: false
+      default: "{{ dhcp_broadcast_default }}"
+    - name: dhcp_bootip_from
+      prompt: "DHCP Dynamic bootp from ip"
+      private: false
+      default: "{{ dhcp_bootip_from_default }}"
+    - name: dhcp_bootip_to
+      prompt: "DHCP Dynamic bootp to ip"
+      private: false
+      default: "{{ dhcp_bootip_to_default }}"
+    - name: dhcp_server
+      prompt: "DHCP Next server"
+      private: false
+      default: "{{ dhcp_server_default }}"
+    - name: install_cl
+      prompt: "Install CL8? (y/n)"
+      private: false
+      default: "n"
 
   tasks:
-  - name: PXE - install packages
-    yum:
-      name:
-        - tftp
-        - tftp-server
-        - dhcp-server
-        - syslinux
-        - rsyslog
-      state: latest
+    - name: PXE - install packages # noqa package-latest
+      ansible.builtin.package:
+        name:
+          - tftp
+          - tftp-server
+          - dhcp-server
+          - syslinux
+          - rsyslog
+        state: latest
 
-  - name: PXE - copy dhcp conf
-    copy:
-      src: "./sources/dhcpd.conf"
-      dest: "/etc/dhcp/dhcpd.conf"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#subnet#'
-      replace: "{{ dhcp_subnet }}"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#netmask#'
-      replace: "{{ dhcp_netmask }}"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#broadcast#'
-      replace: "{{ dhcp_broadcast }}"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#bootip_from#'
-      replace: "{{ dhcp_bootip_from }}"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#bootip_to#'
-      replace: "{{ dhcp_bootip_to }}"
-  - replace:
-      path: "/etc/dhcp/dhcpd.conf"
-      regexp: '#server#'
-      replace: "{{ dhcp_server }}"
+    - name: PXE - copy dhcp conf
+      ansible.builtin.copy:
+        src: "./sources/dhcpd.conf"
+        dest: "/etc/dhcp/dhcpd.conf"
+        mode: "0644"
+    - name: DHCP set subnet
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#subnet#'
+        replace: "{{ dhcp_subnet }}"
+    - name: DHCP set netmask
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#netmask#'
+        replace: "{{ dhcp_netmask }}"
+    - name: DHCP set bcast
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#broadcast#'
+        replace: "{{ dhcp_broadcast }}"
+    - name: DHCP set start addr
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#bootip_from#'
+        replace: "{{ dhcp_bootip_from }}"
+    - name: DHCP set end addr
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#bootip_to#'
+        replace: "{{ dhcp_bootip_to }}"
+    - name: DHCP set server
+      ansible.builtin.replace:
+        path: "/etc/dhcp/dhcpd.conf"
+        regexp: '#server#'
+        replace: "{{ dhcp_server }}"
 
-  - name: PXE - install tftp
-    copy:
-      src: "./sources/tftp-server.service"
-      dest: "/etc/systemd/system/tftp-server.service"
-      force: no
-  - copy:
-      src: "/usr/lib/systemd/system/tftp.socket"
-      dest: "/etc/systemd/system/tftp-server.socket"
-      force: no
+    - name: PXE - install tftp
+      ansible.builtin.copy:
+        src: "./sources/tftp-server.service"
+        dest: "/etc/systemd/system/tftp-server.service"
+        force: false
+        mode: "0644"
+    - name: Copy systemd tftp socket
+      ansible.builtin.copy:
+        src: "/usr/lib/systemd/system/tftp.socket"
+        dest: "/etc/systemd/system/tftp-server.socket"
+        force: false
+        mode: "0644"
 
-  - name: PXE - config tftpboot
-    copy:
-      src: "/usr/share/syslinux/pxelinux.0"
-      dest: "/var/lib/tftpboot/pxelinux.0"
-  - copy:
-      src: "/usr/share/syslinux/ldlinux.c32"
-      dest: "/var/lib/tftpboot/ldlinux.c32"
-  - copy:
-      src: "/usr/share/syslinux/menu.c32"
-      dest: "/var/lib/tftpboot/menu.c32"
-  - copy:
-      src: "/usr/share/syslinux/libutil.c32"
-      dest: "/var/lib/tftpboot/libutil.c32"
-  - when: install_cl == "y"
-    get_url:
-      url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/vmlinuz"
-      dest: "/var/lib/tftpboot/vmlinuz"
-  - when: install_cl == "y"
-    get_url:
-      url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/initrd.img"
-      dest: "/var/lib/tftpboot/initrd.img"
+    - name: PXE - config tftpboot
+      ansible.builtin.copy:
+        src: "/usr/share/syslinux/pxelinux.0"
+        dest: "/var/lib/tftpboot/pxelinux.0"
+        mode: "0644"
+    - name: Copy ldlinux.c32
+      ansible.builtin.copy:
+        src: "/usr/share/syslinux/ldlinux.c32"
+        dest: "/var/lib/tftpboot/ldlinux.c32"
+        mode: "0644"
+    - name: Copy menu.c32
+      ansible.builtin.copy:
+        src: "/usr/share/syslinux/menu.c32"
+        dest: "/var/lib/tftpboot/menu.c32"
+        mode: "0644"
+    - name: Copy libutil.c32
+      ansible.builtin.copy:
+        src: "/usr/share/syslinux/libutil.c32"
+        dest: "/var/lib/tftpboot/libutil.c32"
+        mode: "0644"
+    - name: Get CL vmlinuz
+      when: install_cl == "y"
+      ansible.builtin.get_url:
+        url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/vmlinuz"
+        dest: "/var/lib/tftpboot/vmlinuz"
+        mode: "0644"
+    - name: Get CL initrd.img
+      when: install_cl == "y"
+      ansible.builtin.get_url:
+        url: "https://repo.cloudlinux.com/cloudlinux/8/install/x86_64/os/images/pxeboot/initrd.img"
+        dest: "/var/lib/tftpboot/initrd.img"
+        mode: "0644"
 
-  - name: PXE - menu
-    file:
-      path: "/var/lib/tftpboot/pxelinux.cfg"
-      state: directory
-  - copy:
-      src: "./sources/default"
-      dest: "/var/lib/tftpboot/pxelinux.cfg/default"
+    - name: PXE - menu
+      ansible.builtin.file:
+        path: "/var/lib/tftpboot/pxelinux.cfg"
+        state: directory
+        mode: "0755"
+    - name: Copy PXE config
+      ansible.builtin.copy:
+        src: "./sources/default"
+        dest: "/var/lib/tftpboot/pxelinux.cfg/default"
+        mode: "0644"
 
-  - name: PXE - restart systemd
-    systemd:
-      daemon_reload: yes
-  - command: systemctl enable --now tftp-server
-  - systemd:
-      name: tftp
-      state: restarted
-  - systemd:
-      name: dhcpd
-      state: restarted
-  - name: PXE - clear messages log
-    file:
-      path: /var/log/messages
-      state: absent
-  - systemd:
-      name: rsyslog
-      state: restarted
-  - firewalld:
-      service: tftp
-      permanent: yes
-      state: enabled
+    - name: PXE - restart systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+    - name: Enable tftp-server
+      ansible.builtin.systemd:
+        name: tftp-server
+        enabled: true
+        state: started
+    - name: Restart tftp
+      ansible.builtin.systemd:
+        name: tftp
+        state: restarted
+    - name: Restart dhcpd
+      ansible.builtin.systemd:
+        name: dhcpd
+        state: restarted
+    - name: PXE - clear messages log
+      ansible.builtin.file:
+        path: /var/log/messages
+        state: absent
+    - name: Restart rsyslog
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: restarted
+    - name: Allow tftp through firewalld
+      ansible.posix.firewalld:
+        service: tftp
+        permanent: true
+        state: enabled

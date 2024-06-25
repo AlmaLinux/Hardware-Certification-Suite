@@ -1,6 +1,6 @@
 ---
 
-#Setup
+# Setup
 - name: Test Network - setup
   yum:
     name:
@@ -8,9 +8,9 @@
       - ethtool
       - net-tools
     enablerepo: epel
-  loop: [ lts_ip, sut_ip ]
+  loop: [lts_ip, sut_ip]
 
-#Required to run tests in parallel on opennebula
+# Required to run tests in parallel on opennebula
 - name: Ensures that the process <iperf3> is not running
   shell: ps -aux|grep iperf3|wc -l
   register: result
@@ -24,19 +24,22 @@
     seconds: 2
   when: run_on_nebula is defined
 
-#Test
+# Test
 - name: Test Network - run test
-  local_action: command sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }} {{ test_network['duration'] }} {{ test_network['speed'] }} disable-preloader {{ test_network['device'] }}
+  ansible.builtin.command:
+    sh {{ lts_tests_dir}}/network/run_test.sh {{ lts_ip }} {{ sut_ip }}
+    {{ test_network['duration'] }} {{ test_network['speed'] }} disable-preloader {{ test_network['device'] }}
+  delegate_to: localhost
   register: output
 
 - name: Test Network - copy log
   local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/network.log"
 
-#Cleanup
+# Cleanup
 - name: Test Network - cleanup
   yum:
     name:
       - iperf3
     state: removed
-  loop: [ lts_ip, sut_ip ]
+  loop: [lts_ip, sut_ip]
   when: run_on_nebula is not defined

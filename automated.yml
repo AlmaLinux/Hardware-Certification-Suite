@@ -10,80 +10,105 @@
     LC_ALL: "en_US.UTF-8"
   tasks:
 
-    #GENERAL SETUP
-    - tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
+    # GENERAL SETUP
+    - name: Create logs dir
+      tags: [logs_folder, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Create logs dir
-          local_action: file path="{{ lts_logs_dir }}" state="directory" mode="0755"
+          ansible.builtin.file:
+            path: "{{ lts_logs_dir }}"
+            state: "directory"
+            mode: "0755"
+          delegate_to: localhost
 
-    - tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
+    - name: Copy tests
+      tags: [tests_copy, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Copy tests
-          copy:
+          ansible.builtin.copy:
             src: "{{ lts_tests_dir }}/"
             dest: "{{ sut_tests_dir }}"
-            mode: 0777
+            mode: "0777"
 
     ##########
 
-    #EXAMPLE
-    #- tags: example
-    #  block:
-    #  - include: "{{ lts_tests_dir }}/example/roles/main.yml"
+    # EXAMPLE
+    # - tags: example
+    #   block:
+    #   - include: "{{ lts_tests_dir }}/example/roles/main.yml"
 
-    #CONTAINERS
-    - tags: containers
+    # CONTAINERS
+    - name: Containers
+      tags: containers
       block:
-        - include: "{{ lts_tests_dir }}/containers/roles/main.yml"
+        - name: Containers
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/containers/roles/main.yml"
 
-    #CPU
-    - tags: cpu
+    # CPU
+    - name: CPU
+      tags: cpu
       block:
-        - include: "{{ lts_tests_dir }}/cpu/roles/main.yml"
+        - name: CPU
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/cpu/roles/main.yml"
 
-    #HW DETECTION
-    - tags: hw_detection
+    # HW DETECTION
+    - name: Hardware Detection
+      tags: hw_detection
       block:
-        - include: "{{ lts_tests_dir }}/hw_detection/roles/main.yml"
+        - name: Hardware Detection
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/hw_detection/roles/main.yml"
 
-    #KVM
-    - tags: kvm
-      become: yes
+    # KVM
+    - name: KVM
+      tags: kvm
+      become: true
       block:
-        - include: "{{ lts_tests_dir }}/kvm/roles/main.yml"
+        - name: KVM
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/kvm/roles/main.yml"
 
-    #NETWORK
-    - tags: network
+    # NETWORK
+    - name: Network
+      tags: network
       block:
-        - include: "{{ lts_tests_dir }}/network/roles/main.yml"
+        - name: Network
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/network/roles/main.yml"
 
-    #RAID
-    - tags: raid
+    # RAID
+    - name: MD RAID
+      tags: raid
       block:
-        - include: "{{ lts_tests_dir }}/raid/roles/main.yml"
+        - name: MD RAID
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/raid/roles/main.yml"
 
-    #LTP
-    - tags: [ 'never', 'ltp']
+    # LTP
+    - name: LTP
+      tags: ['never', 'ltp']
       block:
-        - include: "{{ lts_tests_dir }}/ltp/roles/main.yml"
+        - name: LTP
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/ltp/roles/main.yml"
 
-    #PHORONIX
-    - tags: [ 'never', 'phoronix' ]
+    # PHORONIX
+    - name: Phoronix
+      tags: ['never', 'phoronix']
       block:
-        - include: "{{ lts_tests_dir }}/phoronix/roles/main.yml"
+        - name: Phoronix
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/phoronix/roles/main.yml"
 
-    #lve limits/cagefs
-    - tags: cllimits
-      block:
-        - include: "{{ lts_tests_dir }}/cllimits/roles/main.yml"
+    # lve limits/cagefs
+    - name: CL limits
+      tags: cllimits
       when: ansible_distribution != 'AlmaLinux'
+      block:
+        - name: CL limits
+          ansible.builtin.include_tasks: "{{ lts_tests_dir }}/cllimits/roles/main.yml"
 
     ##########
 
-    #GENERAL CLEANUP
-    - tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
+    # GENERAL CLEANUP
+    - name: Cleanup
+      tags: [tests_cleanup, containers, cpu, hw_detection, kvm, network, raid, ltp, phoronix, cllimits]
       block:
         - name: Remove tests
-          file:
+          ansible.builtin.file:
             path: "{{ sut_tests_dir }}"
             state: absent

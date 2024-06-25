@@ -6,40 +6,40 @@
   ignore_errors: false
 
   vars_prompt:
-  - name: temp_prompt
-    prompt: "\nPlug-in devices for all tested USB ports and press Enter"
-    private: false
+    - name: temp_prompt
+      prompt: "\nPlug-in devices for all tested USB ports and press Enter"
+      private: false
 
   tasks:
-  - name: USB device detecting
-    command: lsusb
-    register: lsusb_output_after
+    - name: USB device detecting # noqa no-changed-when
+      ansible.builtin.command: lsusb
+      register: lsusb_output_after
 
-  - name: USB test - remove dependent software
-    yum:
-      name: usbutils
-      state: absent
+    - name: USB test - remove dependent software
+      ansible.builtin.package:
+        name: usbutils
+        state: absent
 
-  - name: Searching USB devices info
-    debug:
-      msg: '{{ lsusb_output_after.stdout_lines }}'
-    when: lsusb_output_after.rc == 0
+    - name: Searching USB devices info
+      ansible.builtin.debug:
+        msg: '{{ lsusb_output_after.stdout_lines }}'
+      when: lsusb_output_after.rc == 0
 
-  - name: Searching USB devices info
-    fail:
-      msg: 'USB devices not found! Test Aborted!'
-    when: lsusb_output_after.rc != 0
+    - name: Searching USB devices info
+      ansible.builtin.fail:
+        msg: 'USB devices not found! Test Aborted!'
+      when: lsusb_output_after.rc != 0
 
-  - name: Calculate result
-    shell: echo $(({{ lsusb_output_before.stdout_lines|length }} + {{ usb_count.stdout|int }}))
-    register: result
+    - name: Calculate result # noqa no-changed-when
+      ansible.builtin.shell: echo $(({{ lsusb_output_before.stdout_lines | length }} + {{ usb_count.stdout | int }}))
+      register: result
 
-  - name: Result
-    fail:
-      msg: "Expected {{ result.stdout }} devices, detected {{ lsusb_output_after.stdout_lines|length }}! Test Failed!"
-    when: result.stdout|int != lsusb_output_after.stdout_lines|length
+    - name: Result
+      ansible.builtin.fail:
+        msg: "Expected {{ result.stdout }} devices, detected {{ lsusb_output_after.stdout_lines | length }}! Test Failed!"
+      when: result.stdout | int != lsusb_output_after.stdout_lines | length
 
-  - name: Result
-    debug:
-      msg: "Test Success!"
-    when: result.stdout|int == lsusb_output_after.stdout_lines|length
+    - name: Result
+      ansible.builtin.debug:
+        msg: "Test Success!"
+      when: result.stdout | int == lsusb_output_after.stdout_lines | length

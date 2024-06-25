@@ -1,6 +1,6 @@
 ---
 
-#GENERAL
+# GENERAL
 _ssh_connection: "{{ hostvars[inventory_hostname]['ansible_env'].SSH_CONNECTION }}"
 lts_ip: "{{ _ssh_connection.split(' ')[0] }}"
 lts_tests_dir: "./tests"
@@ -8,12 +8,12 @@ lts_logs_dir: "{{ unique_logs_folder|default('./logs/' + ansible_date_time.iso86
 sut_ip: "{{ _ssh_connection.split(' ')[2] }}"
 sut_tests_dir: "/root/hc-tests"
 
-#CPU
+# CPU
 test_cpu:
   # Test duration seconds, minutes, hours, days, or years with the s, m, h, d, or y suffix.
   duration: "{{ cpu_duration|default('4h') }}"
 
-#Network
+# Network
 test_network:
   # Test duration in seconds
   duration: "{{ network_duration|default('14400') }}"
@@ -22,22 +22,22 @@ test_network:
   # Testing a specific network device
   device: "{{ network_device|default('') }}"
 
-#RAID
+# RAID
 test_raid:
   # Test duration in seconds
   duration: "{{ raid_duration|default('14400') }}"
 
-#PHORONIX
+# PHORONIX
 test_phoronix:
   # Test suites
-  suites: "{{ phoronix_suites|default('pts/sqlite-speedtest pts/php pts/redis pts/nginx pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench') }}"
+  suites:
+    "{{ phoronix_suites|default('pts/sqlite-speedtest pts/php pts/redis pts/nginx
+    pts/apache pts/sqlite pts/openssl pts/compress-gzip pts/glibc-bench') }}"
   folder: "{{ phoronix_folder|default('/root') }}"
   need_space: "{{ phoronix_need_space|default(100) }}"
 
-#LTP
+# LTP
 # Path to clone LTP project to SUT
 ltp_clone_path: /root/ltp
 test_ltp:
   suites: "{{ ltp_suites|default('all') }}"
-
-

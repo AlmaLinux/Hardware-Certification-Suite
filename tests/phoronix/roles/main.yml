@@ -1,13 +1,16 @@
 ---
 
-#Setup
+# Setup
 - name: Phoronix - df
   shell: "df -BG --output=avail {{ test_phoronix['folder'] }} | grep -o '[0-9]*'"
   register: df_output
 
 - name: Phoronix - check space
-  debug:
-    msg: "You don't have enough free disk space to install all test dependencies.\nYou need more than 100 gb of free space.\nPlease change the path to the folder in variable test_phoronix['folder'] in file vars.yml."
+  ansible.builtin.debug:
+    msg:
+      "You don't have enough free disk space to install all test dependencies.\n
+      You need more than 100 gb of free space.\n
+      Please change the path to the folder in variable test_phoronix['folder'] in file vars.yml."
   when: df_output.stdout|int < test_phoronix['need_space']|int
   failed_when: df_output.stdout|int < test_phoronix['need_space']|int
 
@@ -53,7 +56,7 @@
       copy:
         src: "{{ lts_tests_dir }}/phoronix/sources/phoronix-test-suite.xml"
         dest: "/etc/phoronix-test-suite.xml"
-        mode: 0777
+        mode: "0777"
 
     - name: Phoronix - set folder path
       replace:
@@ -61,17 +64,17 @@
         regexp: '~/'
         replace: "{{ test_phoronix['folder'] }}/"
 
-    #Test
+    # Test
     - name: Phoronix - install & run tests
       shell: "phoronix-test-suite batch-benchmark {{ test_phoronix['suites'] }} | tee /root/phoronix.tee.log"
       register: output
 
-    #UNRESOLVED DEPENDENCE
-    #phoronix-test-suite benchmark machine-learning
-    #phoronix-test-suite benchmark hpc
-    #phoronix-test-suite benchmark python
-    #phoronix-test-suite benchmark server-cpu-tests
-    #! scipy and sklearn = python-scikit-learn
+    # UNRESOLVED DEPENDENCE
+    # phoronix-test-suite benchmark machine-learning
+    # phoronix-test-suite benchmark hpc
+    # phoronix-test-suite benchmark python
+    # phoronix-test-suite benchmark server-cpu-tests
+    # ! scipy and sklearn = python-scikit-learn
 
     - name: Phoronix - copy log
       local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/phoronix.log"
@@ -102,7 +105,7 @@
         dest: "{{ lts_logs_dir }}"
       with_items: "{{ json_reports.results }}"
 
-    #Cleanup
+    # Cleanup
     - name: Phoronix - cleanup. Step 1
       file:
         path: '/etc/phoronix-test-suite.xml'

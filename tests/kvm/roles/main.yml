@@ -5,7 +5,7 @@
   register: kvm_compatibility
 
 - name: Test KVM - copy log
-  become: no
+  become: false
   local_action: copy content="{{ kvm_compatibility.stdout }}" dest="{{ lts_logs_dir }}/kvm.log"
 
 - when: kvm_compatibility.rc == 0
@@ -24,7 +24,7 @@
       shell: "{{ sut_tests_dir }}/kvm/qemu-installation-checks.sh"
       register: qemu_is_ok
     - name: Test KVM - write log
-      become: no
+      become: false
       local_action: copy content="{{ kvm_compatibility.stdout }}\n{{ qemu_is_ok.stdout }}" dest="{{ lts_logs_dir }}/kvm.log"
     - name: Test KVM - create qemu-kvm symlink # for `virsh create`
       file:
@@ -33,25 +33,25 @@
         state: link
         owner: root
         group: root
-  
-    #Test
+
+    # Test
     - name: Test KVM - run test
       when: qemu_is_ok.rc == 0 and kvm_compatibility.rc == 0
       shell: "{{ sut_tests_dir }}/kvm/run_test.sh {{ sut_tests_dir }}/kvm/test-vm.xml"
       register: report
-  
+
     - name: Test KVM - copy log
-      become: no
+      become: false
       local_action: copy content="{{ kvm_compatibility.stdout }}\n{{ qemu_is_ok.stdout }}\n{{ report.stdout }}" dest="{{ lts_logs_dir }}/kvm.log"
-  
-    #Cleanup
+
+    # Cleanup
     - name: Test KVM - remove packages
       yum:
         name:
           - qemu-kvm
           - libvirt
         state: absent
-  
+
     - name: Test KVM - remove qemu-kvm symlink
       file:
         path: /usr/bin/qemu-kvm
