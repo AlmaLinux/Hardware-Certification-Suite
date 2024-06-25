@@ -1,4 +1,16 @@
 ---
+# Enable PowerTools/CRB
+- name: Ensure the powertools repository is enabled
+  community.general.dnf_config_manager:
+    name: powertools
+    state: enabled
+  when: ansible_facts['distribution_major_version'] | int == 8
+
+- name: Ensure the crb repository is enabled
+  community.general.dnf_config_manager:
+    name: crb
+    state: enabled
+  when: ansible_facts['distribution_major_version'] | int > 8
 
 # Setup
 - name: Phoronix - df
