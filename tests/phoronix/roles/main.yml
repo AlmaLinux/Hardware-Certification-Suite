@@ -13,6 +13,12 @@
   when: ansible_facts['distribution_major_version'] | int > 8
 
 # Setup
+- name: Increase open file limits
+  ansible.posix.sysctl:
+    name: fs.file-max
+    value: 1000000
+    state: present
+
 - name: Phoronix - df
   shell: "df -BG --output=avail {{ test_phoronix['folder'] }} | grep -o '[0-9]*'"
   register: df_output
@@ -32,36 +38,140 @@
 
 - when: df_output.stdout|int > test_phoronix['need_space']|int
   block:
-    - name: Phoronix - setup. Step 1
-      yum:
+    - name: Phoronix - install EPEL
+      ansible.builtin.package:
         name: epel-release
         state: latest
 
-    - name: Phoronix - setup. Step 2
+    - name: Phoronix - install dependencies
       yum:
         name:
-          - phoronix-test-suite
-          - uuid-devel
-          - snappy-devel
-          - gflags-devel
+          - atlas-devel
+          - bc
+          - brotli-devel
+          - byacc
+          - bzip2-devel
+          - cryptsetup
+          - darktable
+          - dejavu-sans-fonts
+          - eigen3-devel
+          - elfutils-libelf-devel
           - erlang
-          - opencl-headers
-          - yasm
+          - expat-devel
+          - flex
+          - freetype-devel
+          - gegl04-tools
+          - gflags-devel
+          - giflib-devel
+          - gimp
+          - git
+          - glew-devel
+          - glog-devel
+          - glslang
+          - glslang-devel
+          - gmock-devel
+          - gmp-devel
+          - golang
+          - google-benchmark-devel
+          - gperftools-devel
+          - gtest-devel
+          - hwloc-devel
+          - inkscape
+          - iperf3
+          - leveldb-devel
+          - libaio-devel
+          - libassuan-devel
+          - libconfig-devel
+          - libcurl-devel
+          - libevent-devel
+          - libgcrypt-devel
+          - libgpg-error-devel
+          - libksba-devel
+          - libmpc-devel
+          - libnl3-devel
+          - libnsl2-devel
+          # unavailable for arm
+          # - libreoffice
+          - librsvg2-tools
+          - libtiff-devel
+          - libusb-devel
+          - libusbx-devel
+          - libuuid-devel
+          - libuv-devel
+          - libva-devel
+          - libXaw-devel
+          - libxc-devel
+          - libzstd-devel
+          - lksctp-tools-devel
+          - lmdb-devel
+          - luajit
+          - lz4
+          - lz4-devel
+          - maven
+          - mbedtls-devel
+          - meson
+          - mozjs78-devel
+          - mpfr-devel
           - nasm
+          - ncl
+          - ncurses-devel
+          - netcdf-fortran-devel
+          - npm
+          - npth-devel
+          - octave
+          - opencl-headers
+          - opencv-devel
+          - openexr-devel
+          # TODO: finish getting this in EPEL
+          # - openscad
           - p7zip
           - p7zip-plugins
-          - meson
-          - opencv-devel
-          - google-benchmark-devel
-          - expat-devel
-          - dejavu-sans-fonts
-        enablerepo: powertools,epel-playground,epel
+          - paraview
+          - phoronix-test-suite
+          - popt-devel
+          - protobuf-compiler
+          - protobuf-devel
+          - pulseaudio-libs-devel
+          # TODO
+          # - python-scikit-learn
+          - python3-Cython
+          - python3-scipy
+          - python3-scons
+          - R-core
+          - readline-devel
+          - scons
+          - scotch-devel
+          - SDL-devel
+          - SDL2
+          - SDL2-devel
+          - SDL2_image
+          - SDL2_image-devel
+          - SDL2_mixer
+          - SDL2_ttf
+          - SDL_gfx-devel
+          - SDL_image-devel
+          - SDL_net-devel
+          # TODO`
+          # - SDL_sound-devel
+          - SDL_ttf-devel
+          - snappy-devel
+          - sqlite-devel
+          - swig
+          - sysbench
+          - systemd-devel
+          - tcsh
+          - texinfo
+          - tinyxml-devel
+          - uuid-devel
+          - wireguard-tools
+          - yaml-cpp-devel
+          - yasm
+          - zstd
 
     - name: Phoronix - setup. Step 2.a
       yum:
         name:
           - glfw-devel
-        enablerepo: powertools,epel-playground,epel
       when: ansible_architecture == "x86_64"
 
     - name: Phoronix - copy config on SUT
@@ -78,15 +188,11 @@
 
     # Test
     - name: Phoronix - install & run tests
-      shell: "phoronix-test-suite batch-benchmark {{ test_phoronix['suites'] }} | tee /root/phoronix.tee.log"
+      shell: "phoronix-test-suite batch-benchmark {{ test_phoronix['tests'][ansible_facts['distribution_major_version'] | int] | join(' ') }} |
+        tee /root/phoronix.tee.log"
+      environment:
+        FORCE_TIMES_TO_RUN: 1
       register: output
-
-    # UNRESOLVED DEPENDENCE
-    # phoronix-test-suite benchmark machine-learning
-    # phoronix-test-suite benchmark hpc
-    # phoronix-test-suite benchmark python
-    # phoronix-test-suite benchmark server-cpu-tests
-    # ! scipy and sklearn = python-scikit-learn
 
     - name: Phoronix - copy log
       local_action: copy content="{{ output.stdout }}" dest="{{ lts_logs_dir }}/phoronix.log"
