@@ -1,7 +1,22 @@
-Readme
+# Hardware Certification Suite
+This repo is the home of the AlmaLinux Certification Suite, built and maintained by the [AlmaLinux Certification SIG](https://wiki.almalinux.org/sigs/Certification). Contributions to this suite are welcome, and we invite contributors to become active in the SIG itself. 
+
+## Extensions - hardware- or software-specific tests
+
+The certification suite is built modularly with intention, and we would love to expand this suite as our community needs to include the creation of hardware- or software-vendor specific test(s), and running them on request. 
+
+### Example
+
+For MariaDB database we could include a mariadb-test runner with parameters defined by MariaDB Foundation team for the suite to be able to detect functional regressions (potentially even including performance tests).
+
+# Running the Certification suite
+
+Below describes how to run the suite itself. Once the suite is run, results should be submitted to the (Certifications repo)[https://github.com/AlmaLinux/certifications]. 
+
 ===
-LTS - local testing server
-SUT - system under tests
+Definitions: 
+* LTS - local testing server
+* SUT - system under tests
 
 Configure LTS
 ===
@@ -128,3 +143,8 @@ TIPS
 * Notify in advance of the need to prepare the number of devices equal to the number of USB ports on the server to run the USB test.
 * Testing can be delayed, it is recommended to use the screen utility. For example `screen -L -S hctest`
 * For phoronix test, you need more than 100 gigabytes of space, by default it installs dependencies in the `/root` folder, to change the section, you need to change the `test_phoronix['folder']` in the `vars.yml` file.
+
+
+
+---
+This repo is managed by the [AlmaLinux Certification SIG](https://wiki.almalinux.org/sigs/Certification)
