@@ -14,6 +14,7 @@ The test installs and runs the Phoronix test suite with the following test suite
 After the end of the tests, PDF and JSON reports are generated and copied to the logs folder.
 ### Running test automatically
 On LTS run: `ansible-playbook -i <SUT_IP>, automated.yml --tags phoronix`
+
 ### Manual running test
 Instal all dependencies on SUT: 
 

@@ -1,3 +1,88 @@
+# AlmaLinux Certification Suite
+This repo is the home of the AlmaLinux Certification Suite.  We largely rely on open source utilities, tests, and benchmarks to ensure various types workloads are stable on a given hardware configuration.
+
+# Terminology
+- LTS - Local Testing Server
+  - This is the server running the ansible-playbook
+- SUT - System Under Tests
+  - This is the system being tested
+
+# Common Requirements
+- SUT should be a blank, freshly installed and updated AlmaLinux system.
+- ansible >= 2.17 (older may work, but is untested)
+- git
+- screen, tmux, or local shell access
+- \>= 300GB disk space, preferably SSD/NVMe
+
+# Suggested Run
+
+## Local Run
+The suggested way to run the certification suite is combining LTS/SUT - this means running this ansible playbook from the same host that is being tested.  This avoids any network-related issues between LTS and SUT causing a failure.  The expected runtime of the playbook is around 48 hours so the chance of a network blip causing a failure over publicly-networked hosts is great.
+
+We recommend using a local console or in something like `screen` or `tmux`.  We will use `tmux` in this example.
+
+  - Install git-core, tmux, and Python 3.12
+    ```bash
+    dnf install git-core tmux python3.12 -y
+    ```
+  - Clone this repository
+    ```bash
+    git clone https://github.com/AlmaLinux/Hardware-Certification-Suite.git
+    ```
+  - Create python venv  with updated ansible (versus ansible version in EPEL)
+    ```bash
+    # create venv
+    python3.12 -m venv venv
+    # activate venv
+    source venv/bin/activate
+    # install ansible
+    pip install ansible
+    ```
+  - Run test suite in tmux session
+    ```bash
+    # move into ansible playbook dir
+    cd Hardware-Certification-Suite
+    # start tmux session
+    tmux new-session -s almalinux-certification-tests
+    # run playbook
+    ansible-playbook -c local -i 127.0.0.1, automated.yml --tags=phoronix
+    ```
+
+## Remote LTS/SUT
+### Configure LTS
+#### Requirements
+- ansible >= 2.17
+- tmux
+
+#### Setup Commands
+##### AlmaLinux
+```bash
+# install python 3.12
+dnf -y install python3.12 tmux
+# create venv
+python3.12 -m venv venv-almalinux-certification-suite
+# activate venv
+source venv-almalinux-certification-suite/bin/activate
+# install ansible
+pip install ansible
+# start tmux session
+tmux new-session -s almalinux-certification-tests
+# run playbook
+ansible-playbook -i <SUT IP>, automated.yml --tags phoronix
+```
+
+##### Fedora >= 40
+```bash
+# install ansible and tmux
+dnf -y install ansible tmux
+# start tmux session
+tmux new-session -s almalinux-certification-tests
+# run playbook
+ansible-playbook -i <SUT IP>, automated.yml --tags phoronix
+```
+
+# Advanced information
+=======
 # Hardware Certification Suite
 This repo is the home of the AlmaLinux Certification Suite, built and maintained by the [AlmaLinux Certification SIG](https://wiki.almalinux.org/sigs/Certification). Contributions to this suite are welcome, and we invite contributors to become active in the SIG itself. 
 
@@ -38,9 +123,9 @@ How to add a new test
 ===
 
 Clone repository
-`cd ~ && git clone "https://LOGIN@gerrit.cloudlinux.com/a/hardware-certification"`
+`cd ~ && git clone "https://github.com/AlmaLinux/Hardware-Certification-Suite.git"`
 
-Create your test directory in the `~/hardware-certification/tests` folder, for example `example`.
+Create your test directory in the `~/Hardware-Certification-Suite/tests` folder, for example `example`.
 
 **Test directory structure for automated tests**
 
@@ -58,13 +143,13 @@ Create your test directory in the `~/hardware-certification/tests` folder, for e
 |-- stepx.yml - sub playbook with interactive prompts  
 |-- README.md - instructions for working with the test when manually launched
 
-Each automated test should store test results and utility output in a file `name`.log in the root directory of the repository `~/hardware-certification/logs/`. You can get the folder path from a variable `{{ lts_logs_dir }}`.
+Each automated test should store test results and utility output in a file `name`.log in the root directory of the repository `~/Hardware-Certification-Suite/logs/`. You can get the folder path from a variable `{{ lts_logs_dir }}`.
 
-Add your automated tasks that perform the test to the `~/hardware-certification/automated.yml` file and interactive playbook to the `~/hardware-certification/interactive.yml` file located in the root of the repository.
+Add your automated tasks that perform the test to the `~/Hardware-Certification-Suite/automated.yml` file and interactive playbook to the `~/Hardware-Certification-Suite/interactive.yml` file located in the root of the repository.
 
 Each test must be marked with a tag, for example `tags: test_example`
 
-Add your test settings to the `~/hardware-certification/vars.yml` file if required
+Add your test settings to the `~/Hardware-Certification-Suite/vars.yml` file if required
 
 All tests are always run on LTS. How to run a test on LTS.
 ===
@@ -85,7 +170,7 @@ Run command:
 
 Variables
 ===
-Tests can be configured via `~/hardware-certification/vars.yml` file.
+Tests can be configured via `~/Hardware-Certification-Suite/vars.yml` file.
 
 * lts_ip - LTS IP address
 * lts_tests_dir - LTS test folder
@@ -110,7 +195,7 @@ For example:
 Available tags:
 
 * logs_folder - create logs folder
-* tests_copy - copy `~/hardware-certification/tests` folder from LTS to SUT
+* tests_copy - copy `~/Hardware-Certification-Suite/tests` folder from LTS to SUT
 * tests_cleanup - remove tests folder from SUT
 * containers - test
 * cpu - test
@@ -143,8 +228,6 @@ TIPS
 * Notify in advance of the need to prepare the number of devices equal to the number of USB ports on the server to run the USB test.
 * Testing can be delayed, it is recommended to use the screen utility. For example `screen -L -S hctest`
 * For phoronix test, you need more than 100 gigabytes of space, by default it installs dependencies in the `/root` folder, to change the section, you need to change the `test_phoronix['folder']` in the `vars.yml` file.
-
-
 
 ---
 This repo is managed by the [AlmaLinux Certification SIG](https://wiki.almalinux.org/sigs/Certification)
