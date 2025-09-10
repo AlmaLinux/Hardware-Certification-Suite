@@ -46,6 +46,7 @@
     - name: Phoronix - install dependencies
       yum:
         name:
+          - phoronix-test-suite
           - libxml2-devel
           - uuid-devel
           - libuuid-devel
