@@ -43,6 +43,19 @@ test_phoronix:
       - pts/cachebench
       - pts/ramspeed
       - pts/stream
+    10:
+      # compilation
+      - pts/build-python
+      # kernel
+      - pts/osbench
+      - pts/schbench
+      - pts/t-test1
+      - pts/tinymembench
+      - wireguard
+      # memory
+      - pts/cachebench
+      - pts/ramspeed
+      - pts/stream
 
   folder: "{{ phoronix_folder|default('/root') }}"
   need_space: "{{ phoronix_need_space|default(300) }}"
