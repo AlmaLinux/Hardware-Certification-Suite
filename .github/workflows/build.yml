@@ -1,0 +1,36 @@
+on:
+  push:
+  pull_request:
+    #branches: [ main ] # Trigger on pull requests targeting the 'main' branch
+
+jobs:
+  run_suite:
+    strategy:
+      fail-fast: false
+      matrix:
+        version: [8, 9, 10, 10-kitten]
+        arch: [x86_64, aarch64]
+
+    runs-on: runs-on=${{github.run_id}}/family=*metal*/image=almalinux-${{ matrix.version }}-${{ matrix.arch }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install git-core
+      run: |
+        sudo dnf install git-core -y
+
+    - name: Install python3.12
+      run: |
+        sudo dnf install python3.12 -y
+
+    - name: Create python3.12 venv
+      run: |
+        python3.12 -m venv venv
+        source venv/bin/activate
+        pip install ansible
+
+    - name: Run test suite
+      run: |
+        sudo venv/bin/ansible-playbook -c local -i 127.0.0.1, automated.yml --tags=phoronix
