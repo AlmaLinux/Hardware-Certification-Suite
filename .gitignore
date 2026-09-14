@@ -1,1 +1,20 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+*.egg-info/
+build/
+dist/
+runs/
 .idea/
+.vscode/
+alma_certify/data/BUILDINFO
+alma-certify*.tar.xz
+packaging/alma-certify*.tar.xz
+alma-certify*.src.rpm
+results_alma-certify
+
+# clpeak's source is not kept in git. CI fetches it from the Source1 URL at build time, and an
+# RPM build takes it from distgit's lookaside cache.
+clpeak-*.tar.gz

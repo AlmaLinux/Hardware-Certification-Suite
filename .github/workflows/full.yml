@@ -1,0 +1,243 @@
+name: Full suite
+
+# Everything that needs a real machine rather than a container, plus the clean-room package builds.
+#
+# The GPU job is named for its vendor because the driver install is what differs between vendors,
+# not the tests. There is only an NVIDIA one: AWS no longer offers AMD GPU instances.
+#
+# Gated on a maintainer approving it. Each job names the `full-ci` environment, so GitHub holds the
+# run until a reviewer releases it: these are VMs and GPU instances, and they cost real money on
+# every push otherwise. Create that environment under Settings -> Environments and add the required
+# reviewers; without it these jobs run unreviewed.
+#
+# Nothing here submits. --no-submit on every run: the suite's built-in server is the production
+# catalog, and CI is here to prove the tests execute, not to file results. That also means no
+# device registration and no token, so these need no credentials at all.
+#
+# These are VMs, and the suite does not certify a VM. That gate is on *submission* only - execution
+# is unaffected - so a --no-submit run exercises every test exactly as it would on metal, and the
+# report still records honestly that it ran in a guest.
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main, next]
+
+permissions:
+  contents: read
+
+jobs:
+  # The clean-room build. Everything else runs the suite; this one proves the package builds against
+  # a real AlmaLinux root, with the interpreter and the repositories that release actually has.
+  mock:
+    name: mock ${{ matrix.dist }}
+    environment: full-ci
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:10
+      # mock needs to set up chroots and mounts.
+      options: --privileged
+    strategy:
+      fail-fast: false
+      matrix:
+        dist: [alma+epel-8-x86_64, alma+epel-9-x86_64, alma+epel-10-x86_64]
+    steps:
+      - name: Install mock
+        run: |
+          dnf install -y epel-release git make tar xz rpm-build
+          dnf install -y mock mock-core-configs
+
+      - uses: actions/checkout@v7
+
+      # `make mock-rpm`, not an inline tar and rpmbuild. This job staged the sources itself, and
+      # when Source0 moved from .tar.xz to .tar.gz it went on building the old name: every mock
+      # build failed at `Bad file: alma-certify-0.1.0.tar.gz`. The package job in ci.yml had the
+      # same bug and was fixed the same way. One place states what the tarball is called, and it is
+      # the Makefile, which reads the version out of the tree rather than repeating it.
+      - name: Rebuild in a clean chroot
+        run: make mock-rpm DIST=${{ matrix.dist }}
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mock-${{ matrix.dist }}
+          path: build/rpm/RPMS/${{ matrix.dist }}/*.log
+
+  # A whole run on a real kernel: everything a container cannot do. Most of the catalog executes
+  # here, and the tests that cannot (no BMC, no ECC, no SMART on a virtio disk) report a skip with a
+  # reason
+  run-on-vm:
+    name: Full run on AlmaLinux ${{ matrix.version }} ${{ matrix.arch }}
+    environment: full-ci
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["8", "9", "10", "10-kitten"]
+        arch: ["x86_64", "aarch64"]
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=default
+      - image=almalinux-${{ matrix.version }}-${{ matrix.arch }}
+      - volume=30gb
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Pick an interpreter (el8 needs python3.12)
+        id: py
+        run: |
+          if [ "${{ matrix.version }}" = "8" ]; then
+            sudo dnf install -y python3.12
+            echo "bin=python3.12" >> "$GITHUB_OUTPUT"
+          else
+            echo "bin=python3" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The suite shells out to dmidecode, lspci, smartctl, ethtool and friends. Running from a
+      # checkout installs none of them, because they are the package's Requires and nothing here
+      # installs the package. Without this most of the catalog reports a tool-missing skip and the
+      # run proves very little. The list comes from the spec so the two cannot drift.
+      - name: Install what the suite shells out to
+        run: |
+          sudo dnf install -y make rpm-build
+          sudo dnf install -y $(rpmspec -q --requires packaging/alma-certify.spec \
+            | grep -vE '^(alma-certify|python3)' | sort -u)
+
+      # `run` rather than the three commands separately: it is ["collect", "validate", "benchmark"]
+      # in one run directory with one report, which is both what a real certification does and the
+      # only way the three phases are exercised together. The benchmarks matter here as much as the
+      # checks do, because a benchmark that cannot build its workload or find its tool is a failure
+      # nothing else in CI would catch.
+      #
+      # Every non-interactive test. The three interactive ones (reboot, suspend, usb.hotplug) need a
+      # person and are left out of any run that does not ask for them.
+      - name: Run collect, validate, and benchmark
+        run: sudo ${{ steps.py.outputs.bin }} -m alma_certify run --run-dir "$PWD/runs" --no-submit
+
+      # The rest of the engine, which no unit test covers end to end on a real run.
+      - name: Report, bundle, and list
+        run: |
+          run_id=$(sudo ${{ steps.py.outputs.bin }} -m alma_certify runs --run-dir "$PWD/runs" --json \
+                   | ${{ steps.py.outputs.bin }} -c 'import json,sys; print(json.load(sys.stdin)[0]["run_id"][:8])')
+          sudo ${{ steps.py.outputs.bin }} -m alma_certify report "$run_id" --run-dir "$PWD/runs"
+          sudo ${{ steps.py.outputs.bin }} -m alma_certify bundle "$run_id" --run-dir "$PWD/runs" -o "$PWD/bundle.tar.zst"
+          test -s "$PWD/bundle.tar.zst"
+
+      # The run executes as root and its directory is 0750, deliberately: it holds a full hardware
+      # inventory, down to serial numbers and DMI UUIDs. upload-artifact runs as the unprivileged
+      # runner user, so it fails with EACCES on the first file it opens. Hand it over first.
+      # always(), because a failed run is exactly the one worth collecting.
+      - name: Hand the run directory to the runner
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$PWD/runs" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: vm-run-${{ matrix.version }}
+          path: runs/
+
+  # The NVIDIA path, on a stock image with no driver in it. The point is the suite's own setup: it
+  # decides what this release needs, adds the repository, installs the packages, and loads the
+  # module into the running kernel, and only then can the GPU checks mean anything.
+  #
+  # Specifically NVIDIA, and named so, because the install is what makes it vendor-specific:
+  # almalinux-release-nvidia-driver, then nvidia-open. The `gpu` category itself is not: six of its
+  # eleven tests (driver, both opencl-*, both vulkan-*, and clpeak) run on any vendor's card, and
+  # only the cuda-* checks and nvidia-smi need this one. So a job for another vendor would differ
+  # in its setup and share its tests.
+  #
+  # No el8 here. Its install is a different route again - NVIDIA's own repository, PowerTools,
+  # EPEL for DKMS and a module stream, where 9, 10 and Kitten all take AlmaLinux's own release
+  # package - so this covers one route, deliberately.
+  run-on-nvidia-gpu:
+    name: NVIDIA GPU run on AlmaLinux ${{ matrix.version }} ${{ matrix.arch }}
+    environment: full-ci
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["9", "10", "10-kitten"]
+        arch: ["x86_64", "aarch64"]
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=g5+g6.*+g7+g5g
+      - image=almalinux-${{ matrix.version }}-${{ matrix.arch }}
+      - volume=30gb
+    steps:
+      - uses: actions/checkout@v7
+
+      # The suite shells out to dmidecode, lspci, smartctl, ethtool and friends. Running from a
+      # checkout installs none of them, because they are the package's Requires and nothing here
+      # installs the package. lspci matters most on this job: it is the only way the suite
+      # enumerates GPUs, so without it every card looks absent and the setup below finds nothing
+      # to do. The list comes from the spec so the two cannot drift.
+      - name: Install what the suite shells out to
+        run: |
+          sudo dnf install -y make rpm-build
+          sudo dnf install -y $(rpmspec -q --requires packaging/alma-certify.spec \
+            | grep -vE '^(alma-certify|python3)' | sort -u)
+
+      # Just the card. nvidia-smi ships with the driver bundle, which is precisely what this job
+      # has not installed yet, so asking for it here could only ever print "command not found".
+      - name: The card this machine has
+        run: lspci -nn | grep -i -E 'vga|3d|display' || true
+
+      # The plan only, changing nothing: proves setup-gpu still describes a correct route for this
+      # release before anything acts on it.
+      - name: NVIDIA setup plan
+        run: sudo python3 -m alma_certify setup-gpu --dry-run
+
+      # --scope gpu rather than --category gpu. Both narrow the tests to the same nine, but the
+      # scope also narrows what the run *claims*: a component claim about the card, not a machine
+      # validation that happened to skip nearly everything. That is the honest description of this
+      # job, and it is the one claim shape that means anything from a cloud instance, where the
+      # host belongs to somebody else. Everything a whole-machine claim would cover is covered by
+      # run-on-vm above.
+      #
+      # `run` is ["collect", "validate", "benchmark"] in one run directory, so the card is
+      # collected, checked, and benchmarked together, the way a real certification does it.
+      #
+      # --gpu-setup is the built-in path, answered yes: the run offers to install what the card
+      # needs, installs it, loads the module, and then runs the GPU checks. This is what a real
+      # certification run does on a machine with a card and no driver.
+      #
+      # If the module will not load into the running kernel, the run says so and stops before the
+      # tests rather than spending the time without a GPU - green, but with nothing exercised. The
+      # nvidia-smi step below is what makes that outcome visible rather than silent.
+      # clpeak's source, verified against packaging/sources.sha512 and dropped where the suite
+      # looks for it. Running from a checkout there is no RPM to have installed it, so without this
+      # bench.gpu.clpeak skips for want of its source and the GPU benchmark proves half of what it
+      # should. `make` does the fetching so a laptop and CI use one implementation.
+      - name: clpeak source
+        run: make clpeak-in-tree
+
+      # --require-gpu is what makes this job able to fail. Without it the suite does the right
+      # thing for a person certifying a machine: an install that fails is a note, the GPU checks
+      # skip and say why, and the run exits 0. A CI job whose whole purpose is to prove the stack
+      # installs then reports success having proved nothing, which is exactly what it did.
+      - name: Install the NVIDIA driver, then validate and benchmark the GPU
+        run: |
+          sudo python3 -m alma_certify run \
+            --run-dir "$PWD/runs" --no-submit --gpu-setup --require-gpu --scope gpu
+
+      # Unconditional, so it is a record rather than a gate: --require-gpu above has already failed
+      # the job if the stack did not come up.
+      - name: What the suite ended up with
+        if: always()
+        run: |
+          nvidia-smi || true
+          lsmod | grep -E '^nvidia' || true
+
+      # The run executes as root and its directory is 0750, deliberately: it holds a full hardware
+      # inventory, down to serial numbers and DMI UUIDs. upload-artifact runs as the unprivileged
+      # runner user, so it fails with EACCES on the first file it opens. Hand it over first.
+      # always(), because a failed run is exactly the one worth collecting.
+      - name: Hand the run directory to the runner
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$PWD/runs" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nvidia-gpu-run-${{ matrix.version }}
+          path: runs/

@@ -1,0 +1,71 @@
+# Development tooling only. The runtime is stdlib-only and needs no install:
+#   sudo python3 -m alma_certify --help
+[project]
+name = "alma-certify"
+description = "AlmaLinux hardware certification suite"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+alma-certify = "alma_certify.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "alma_certify",
+    "alma_certify.inventory",
+    "alma_certify.validate",
+    "alma_certify.benchmarks",
+    "alma_certify.submit",
+    "alma_certify.data",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "alma_certify.__version__"}
+
+[tool.setuptools.package-data]
+# ``*.tar.gz`` is the bundled clpeak source. Nothing in this suite downloads at run time, and a
+# benchmark whose result depends on what a mirror served that day is not comparable between
+# machines, so the source ships with the package and the version is pinned by whatever is dropped
+# in here at packaging time.
+"alma_certify.data" = ["*.c", "*.cu", "*.conf", "*.tmpl", "*.tar.gz", "BUILDINFO"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+# Vendored verbatim from upstream (MIT); not ours to reformat, and it uses tabs.
+# alma_certify_tui/_vendor is the Textual TUI's vendored third-party stack (see packaging/vendor/):
+# upstream code we do not reformat, plus our own pygments shim which lives there because it ships
+# there. The shim's source of record is packaging/vendor/patches/pygments/, which is linted.
+extend-exclude = ["alma_certify/_qrcodegen.py", "alma_certify_tui/_vendor"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# The runtime floor is python3.9 (AlmaLinux 9's system interpreter). These
+# rules push py310+ idioms that only work here because of
+# `from __future__ import annotations`, and %-formatting is used deliberately.
+ignore = ["UP006", "UP007", "UP035", "UP045", "UP031"]
+
+[tool.ruff.lint.per-file-ignores]
+# Fixtures in this file are stress-ng's metrics table copied verbatim, and its
+# columns are wider than 100 characters. Reflowing them to satisfy a linter
+# would mean the fixture no longer matches what the tool prints, which is the
+# only property that makes it worth having.
+"tests/test_stressng.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gate: sees the real uid rather than the assume_root fixture; for the root/sudo gate itself",
+]

@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "Input manifest for update_vendor.py. Edit this to add a package or bump a pin, then run the",
+    "script; it resolves 'auto' to the newest release whose Requires-Python still admits our floor,",
+    "writes vendor.lock.json with the exact versions and hashes it used, and prints the spec lines.",
+    "",
+    "pygments is deliberately absent. Rich reaches it only through rich/syntax.py, which the",
+    "'neuter_rich_syntax' patch replaces with a plain-text shim, so nothing imports pygments and it",
+    "need not be vendored at all. The script asserts that afterwards.",
+    "",
+    "'license' is the authoritative SPDX id for the spec's License tag. The script cross-checks it",
+    "against each wheel's own metadata and fails on a mismatch, so a relicense upstream cannot slip",
+    "through silently."
+  ],
+  "min_python": "3.9",
+  "vendor_dir": "alma_certify_tui/_vendor",
+  "prune_globs": ["**/__pycache__", "**/tests", "**/test", "**/py.typed.bak"],
+  "inject": [
+    {"dest": "pygments", "src": "patches/pygments",
+     "note": "Our own MIT null-highlighter shim, not the real Pygments. See patches/pygments/__init__.py."}
+  ],
+  "drift_ignore": {
+    "pygments": "Declared by rich and textual, but deliberately satisfied by the injected shim above rather than vendored. The smoke test proves the shim covers what they import."
+  },
+  "packages": [
+    {"name": "textual", "version": "auto", "license": "MIT"},
+    {"name": "rich", "version": "auto", "license": "MIT"},
+    {"name": "markdown-it-py", "version": "auto", "license": "MIT", "import_name": "markdown_it"},
+    {"name": "mdurl", "version": "auto", "license": "MIT"},
+    {"name": "mdit-py-plugins", "version": "auto", "license": "MIT", "import_name": "mdit_py_plugins"},
+    {"name": "linkify-it-py", "version": "auto", "license": "MIT", "import_name": "linkify_it"},
+    {"name": "uc-micro-py", "version": "auto", "license": "MIT", "import_name": "uc_micro"},
+    {"name": "platformdirs", "version": "auto", "license": "MIT"},
+    {"name": "typing-extensions", "version": "auto", "license": "PSF-2.0", "import_name": "typing_extensions"}
+  ]
+}

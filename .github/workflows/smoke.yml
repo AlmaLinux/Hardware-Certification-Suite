@@ -1,0 +1,71 @@
+name: Bare-metal smoke
+
+# Real hardware runs: collect + a short validate pass + two benchmarks on
+# each supported AlmaLinux release and architecture.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["8", "9", "10"]
+        arch: [x86_64, aarch64]
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - family=*metal*
+      - image=almalinux-${{ matrix.version }}-${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Pick an interpreter (el8 needs python3.12)
+        id: py
+        run: |
+          if [ "${{ matrix.version }}" = "8" ]; then
+            sudo dnf install -y python3.12
+            echo "bin=python3.12" >> "$GITHUB_OUTPUT"
+          else
+            echo "bin=python3" >> "$GITHUB_OUTPUT"
+          fi
+
+      # --no-submit throughout: these are throwaway runs on a CI machine, and the suite's built-in
+      # default server is the production catalog, so without it every job here would try to register
+      # a device and upload. A collect run is a survey submission, so it needs the flag too.
+      - name: Collect inventory
+        run: |
+          sudo ${{ steps.py.outputs.bin }} -m alma_certify collect \
+            --run-dir "$PWD/runs" --no-submit
+
+      # No --exclude: the three interactive tests (reboot, suspend, usb.hotplug) are already left
+      # out of any run that does not pass --interactive, so naming one here only looked like it was
+      # doing something.
+      - name: Validate (every non-interactive test)
+        run: |
+          sudo ${{ steps.py.outputs.bin }} -m alma_certify validate \
+            --run-dir "$PWD/runs" --no-submit
+
+      - name: Two benchmarks
+        run: |
+          sudo ${{ steps.py.outputs.bin }} -m alma_certify benchmark \
+            --run-dir "$PWD/runs" --no-submit \
+            --only bench.cpu.sysbench-single,bench.crypto.openssl-sha256
+
+      - name: Validate report against the schema
+        run: ${{ steps.py.outputs.bin }} tests/validate_report_schema.py "$PWD/runs"
+
+      # The run executes as root and its directory is 0750, deliberately: it holds a full hardware
+      # inventory, down to serial numbers and DMI UUIDs. upload-artifact runs as the unprivileged
+      # runner user, so it fails with EACCES on the first file it opens. Hand it over first.
+      # always(), because a failed run is exactly the one worth collecting.
+      - name: Hand the run directory to the runner
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" "$PWD/runs" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: run-${{ matrix.version }}-${{ matrix.arch }}
+          path: runs/

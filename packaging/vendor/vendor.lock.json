@@ -1,0 +1,137 @@
+{
+  "drift": [],
+  "in_tree_licenses": [
+    "mdit_py_plugins/admon/LICENSE",
+    "mdit_py_plugins/container/LICENSE",
+    "mdit_py_plugins/deflist/LICENSE",
+    "mdit_py_plugins/footnote/LICENSE",
+    "mdit_py_plugins/front_matter/LICENSE",
+    "mdit_py_plugins/texmath/LICENSE"
+  ],
+  "injected": [
+    {
+      "dest": "pygments",
+      "note": "Our own MIT null-highlighter shim, not the real Pygments. See patches/pygments/__init__.py."
+    }
+  ],
+  "packages": [
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "textual",
+      "requires_python": "<4.0,>=3.9",
+      "sha256": "267375fd402dc8d981457212efa71f0e3365fd17bba144ba9bb3ed7563cb374a",
+      "top_levels": [
+        "textual"
+      ],
+      "version": "8.2.8"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "rich",
+      "requires_python": ">=3.9.0",
+      "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+      "top_levels": [
+        "rich"
+      ],
+      "version": "15.0.0"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE",
+        "LICENSE.markdown-it"
+      ],
+      "name": "markdown-it-py",
+      "requires_python": ">=3.8",
+      "sha256": "355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1",
+      "top_levels": [
+        "markdown_it"
+      ],
+      "version": "3.0.0"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "mdurl",
+      "requires_python": ">=3.7",
+      "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+      "top_levels": [
+        "mdurl"
+      ],
+      "version": "0.1.2"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "mdit-py-plugins",
+      "requires_python": ">=3.8",
+      "sha256": "0c673c3f889399a33b95e88d2f0d111b4447bdfea7f237dab2d488f459835636",
+      "top_levels": [
+        "mdit_py_plugins"
+      ],
+      "version": "0.4.2"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "linkify-it-py",
+      "requires_python": ">=3.7",
+      "sha256": "6bcbc417b0ac14323382aef5c5192c0075bf8a9d6b41820a2b66371eac6b6d79",
+      "top_levels": [
+        "linkify_it"
+      ],
+      "version": "2.0.3"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "uc-micro-py",
+      "requires_python": ">=3.7",
+      "sha256": "db1dffff340817673d7b466ec86114a9dc0e9d4d9b5ba229d9d60e5c12600cd5",
+      "top_levels": [
+        "uc_micro"
+      ],
+      "version": "1.0.3"
+    },
+    {
+      "license": "MIT",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "platformdirs",
+      "requires_python": ">=3.9",
+      "sha256": "abd01743f24e5287cd7a5db3752faf1a2d65353f38ec26d98e25a6db65958c85",
+      "top_levels": [
+        "platformdirs"
+      ],
+      "version": "4.4.0"
+    },
+    {
+      "license": "PSF-2.0",
+      "license_files": [
+        "LICENSE"
+      ],
+      "name": "typing-extensions",
+      "requires_python": ">=3.9",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "top_levels": [
+        "typing_extensions.py"
+      ],
+      "version": "4.16.0"
+    }
+  ]
+}

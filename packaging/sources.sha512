@@ -1,0 +1,7 @@
+# Checksums for the sources fetched at packaging time, in sha512sum -c format so `sha512sum -c`
+# does the checking. A pinned version is only a pin if the bytes behind it are pinned too: a
+# re-tagged upstream or a compromised mirror would otherwise be fetched and built without a word.
+#
+# Regenerate after a version bump with:
+#   ( cd build/rpm/SOURCES && sha512sum clpeak-*.tar.gz ) > packaging/sources.sha512
+2ad60ecc57cd901fed0f04bb452d7d198088779ac8c60a1da803c487c3ddfac6bbc676db58c2e79901ac6f64237cbef0fc406955e06303e973e3b3cb0b2f1ae3  clpeak-2.1.4.tar.gz

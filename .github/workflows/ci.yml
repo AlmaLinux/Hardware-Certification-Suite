@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    # The releases the package targets, each on the interpreter it actually ships against, rather
+    # than on whatever Python a generic runner happens to have. That is the point of the matrix:
+    # el9's 3.9 is the language floor, and it is also the release whose vendored Textual stack has
+    # the least margin, so "it imports on 3.9" is a CI answer rather than a local assumption.
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container: almalinux:${{ matrix.tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # el8's platform python3 is 3.6, below the suite's floor, so it ships against AppStream's
+          # python3.12 and CI has to install that before anything else will run.
+          - name: AlmaLinux 8 (python3.12)
+            tag: "8"
+            python: python3.12
+          - name: AlmaLinux 9 (python3.9, the floor)
+            tag: "9"
+            python: python3
+          - name: AlmaLinux 10 (python3.12)
+            tag: "10"
+            python: python3
+          - name: AlmaLinux Kitten 10
+            tag: 10-kitten
+            python: python3
+    steps:
+      # git first: actions/checkout falls back to a REST download without it, which gives a tree
+      # with no repository. zstd because result bundles are .tar.zst and the package Requires it;
+      # on 3.9 the suite shells out to it, so without it the bundle tests fail.
+      - name: Install git, zstd, and the interpreter
+        run: dnf install -y git zstd ${{ matrix.python }} ${{ matrix.python }}-pip
+
+      - uses: actions/checkout@v7
+
+      - name: Install the test tools
+        run: ${{ matrix.python }} -m pip install --quiet pytest ruff
+
+      # The binary, not `python -m ruff`: pip puts it in /usr/local/bin and ruff's module entry
+      # point only looks in a few other places, so `-m` raises RuffNotFound here.
+      - name: Lint
+        run: ruff check alma_certify alma_certify_tui tests
+
+      - name: Unit tests
+        run: ${{ matrix.python }} -m pytest tests -ra
+
+      - name: Every module imports on this interpreter
+        run: |
+          ${{ matrix.python }} -c 'import importlib, pkgutil, alma_certify; \
+            [importlib.import_module(m.name) \
+             for m in pkgutil.walk_packages(alma_certify.__path__, "alma_certify.")]'
+
+      - name: Catalog loads and the CLI runs
+        run: |
+          ${{ matrix.python }} -m alma_certify --version
+          ${{ matrix.python }} -m alma_certify list --json > /dev/null
+
+  # Build the RPM and then use the thing that was built, rather than a checkout. This is where
+  # launcher, path, permission, and %files bugs surface: `python -m alma_certify` from a source tree
+  # exercises none of them, and the spec's own %check runs here too, on each release's interpreter.
+  package:
+    name: RPM on ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:${{ matrix.tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: AlmaLinux 8
+            tag: "8"
+            python: python3.12
+            crb: powertools
+          - name: AlmaLinux 9
+            tag: "9"
+            python: python3
+            crb: crb
+          - name: AlmaLinux 10
+            tag: "10"
+            python: python3
+            crb: crb
+          - name: AlmaLinux Kitten 10
+            tag: 10-kitten
+            python: python3
+            crb: crb
+    steps:
+      - name: Build requirements
+        run: |
+          dnf install -y make git tar xz rpm-build dnf-command\(config-manager\)
+          dnf config-manager --set-enabled ${{ matrix.crb }} || true
+          dnf install -y ${{ matrix.python }}-devel ${{ matrix.python }}-pytest
+          # el8's python3.12-devel predates the rich dependency that pulls the macros in.
+          if [ "${{ matrix.tag }}" = "8" ]; then dnf install -y python3-rpm-macros; fi
+
+      - uses: actions/checkout@v7
+
+      # `make rpm`, not an inline tar and rpmbuild. This job used to stage the sources itself, and
+      # when Source0 moved from .tar.xz to .tar.gz it kept building the old name and the build
+      # failed on a missing source. The Makefile takes both names and the clpeak URL out of the
+      # spec, so there is one implementation and nothing here to keep in step.
+      #
+      # %check runs the whole suite against the tree that is about to be packaged.
+      - name: Build
+        run: make rpm
+
+      - name: Install it
+        run: dnf install -y build/rpm/RPMS/noarch/*.rpm
+
+      - name: Run the installed command
+        run: |
+          alma-certify --version
+          alma-certify list --json > /dev/null
+          # A real run, writing to the packaged run directory. --no-submit throughout CI: the
+          # built-in default server is the production catalog, and nothing here should reach it.
+          alma-certify collect --no-submit
+          alma-certify runs
+
+      - name: What the package promises about itself
+        run: |
+          test "$(stat -c %a /var/cache/alma-certify)" = 700
+          test "$(stat -c %a /var/lib/alma-certify/runs)" = 750
+          # every bundled dependency's license text, marked %license
+          test "$(rpm -q --licensefiles alma-certify-tui | wc -l)" -ge 17
+          rpm -q --licensefiles alma-certify-tui | grep -q typing-extensions
