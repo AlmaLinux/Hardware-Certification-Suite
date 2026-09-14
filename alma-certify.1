@@ -1,0 +1,211 @@
+.\" Man page for alma-certify, the AlmaLinux hardware certification suite.
+.\"
+.\" Deliberately narrow. It names every command, the options that change what a run *claims*, and
+.\" the files a reader has to know about, and it sends anyone after the full option list to --help.
+.\" A man page that restates every flag drifts from the parser the first time somebody adds one, and
+.\" a stale man page is worse than a short one.
+.TH ALMA\-CERTIFY 1 "August 2026" "alma-certify" "System Administration"
+.SH NAME
+alma\-certify \- collect, validate, and benchmark hardware for AlmaLinux certification
+.SH SYNOPSIS
+.B alma\-certify
+.RI [ global-option ...]
+.I command
+.RI [ option ...]
+.SH DESCRIPTION
+.B alma\-certify
+runs the hardware certification suite of the AlmaLinux Certification SIG. It gathers a hardware
+inventory, runs functional validation tests, and measures benchmarks, then writes a versioned JSON
+report and the raw artifacts behind it into a run directory. A run can be submitted to the AlmaLinux
+certification web application over the network, or bundled as a tarball and uploaded by hand from a
+machine with no route to it.
+.PP
+Run with no command at an interactive terminal,
+.B alma\-certify
+starts its guided full-screen interface. Every action it offers is also a command with options, so
+nothing here needs a terminal: the suite is built to run unattended from a kickstart
+.B %post
+or a CI job, and never waits for input it was not given.
+.PP
+Supported on AlmaLinux 8, 9, and 10, on x86_64 and aarch64 only. ppc64le and s390x are not
+supported: neither has a
+.BR dmidecode (8)
+build, and this suite reads SMBIOS to identify the machine it is certifying.
+.PP
+Certifying a machine needs bare metal. A run inside a virtual machine or a container is performed
+and kept, but a whole-machine claim from a guest is never uploaded: the firmware, storage controller,
+and network device it tested are the hypervisor's. A GPU passed through to a guest is the real
+device, so
+.B \-\-scope gpu
+is submittable from there.
+.PP
+Every command needs root, because reading DMI, PCI configuration space, and SMART data does, and
+because the run directory and the submission token are root's. Run without it at a terminal, the
+suite offers to re-run itself under
+.BR sudo (8)
+and does so if you agree; with nothing to ask, it refuses and prints the command to run rather than
+prompting into a closed stdin.
+.B \-\-help
+and
+.B \-\-version
+need nothing.
+.SH COMMANDS
+.TP
+.B collect
+Collect the hardware inventory and nothing else.
+.TP
+.B validate
+Run the validation tests.
+.TP
+.B benchmark
+Run the benchmarks.
+.TP
+.B run
+Collect, validate, and benchmark in one run.
+.TP
+.B resume
+Continue a run that was interrupted, skipping the tests that already finished.
+.TP
+.B setup\-gpu
+Install the NVIDIA driver and CUDA toolkit a GPU needs before it can be certified. Prints the exact
+commands it will run and what they change, and asks before doing any of it.
+.TP
+.B tui
+Start the guided interface explicitly.
+.TP
+.B runs
+List the runs in the run directory, newest first, with what each one claims and whether it has been
+submitted.
+.TP
+.B list
+List the available tests.
+.TP
+.B report
+Print a human-readable summary of a run.
+.TP
+.B bundle
+Package a run as a tarball for manual upload.
+.TP
+.B register
+Obtain a submission token from the server.
+.TP
+.B submit
+Submit a run to the server.
+.SH OPTIONS
+The options below change what a run claims or where it goes, which is why they are here. For the
+complete list, including test selection and the interactive test gate, see
+.B alma\-certify
+.I command
+.BR \-\-help .
+.TP
+.BI \-\-config " FILE"
+Read configuration from
+.I FILE
+instead of the system configuration file.
+.TP
+.B \-\-dev
+Submit to the staging catalog at https://lumina.almalinux.dev rather than the production one at
+https://catalog.almalinux.org. For developing against a pre\-release server;
+.B \-\-server
+overrides it.
+.TP
+.BI \-\-server " URL"
+Base URL of the certification server. Overrides the configuration file, and is also read from
+.BR $ALMA_CERTIFY_SERVER .
+.TP
+.B \-\-allow\-self\-signed
+Accept the server's TLS certificate without verifying it, for a dev or staging catalog serving a
+self-signed certificate. This accepts
+.I any
+certificate from whatever answers on that address and stops checking that the name matches, so use it
+only against a server you know. Every run then reports on standard error that verification is off.
+Also settable as
+.B allow_self_signed
+in the configuration file, for a machine that always talks to such a catalog. Where you have a copy
+of the certificate, adding it to the host's trust store is the better answer and leaves this alone.
+.TP
+.BI \-\-run\-dir " DIR"
+Base directory for run state.
+.TP
+.BI \-\-scope " KIND" [,KIND...]
+Record the run as evidence about the named components and about nothing else, rather than about the
+whole machine.
+.B gpu
+is the only kind accepted: a graphics card is the one component a virtual machine sees as the real
+device, so a scoped run may be made in a guest, while certifying a machine needs bare metal. A
+scoped run still records everything it collected, because the host is context a reviewer wants, and
+the server will not create, link, or certify a system listing from it. Narrows which tests run as
+well, unless
+.B \-\-category
+says otherwise.
+.TP
+.B \-\-pre\-release
+Mark the hardware as unreleased. The submission is embargoed and withheld from public view.
+.TP
+.BI \-\-publish\-after " YYYY-MM-DD"
+Earliest date the result may be published.
+.TP
+.B \-\-redact
+Omit serial numbers and UUIDs from the report.
+.TP
+.B \-\-no\-epel
+Do not install
+.B epel\-release
+or enable CodeReady Builder. Tests whose tools are not already present are skipped rather than
+installed for.
+.TP
+.B \-\-no\-submit
+Finish the run and stop, without offering to submit it.
+.TP
+.B \-\-allow\-unsupported\-os
+Run on a host that is not a supported AlmaLinux release without being asked to confirm. The result is
+recorded as having run elsewhere and certifies nothing.
+.TP
+.B \-\-version
+Print the suite version and exit.
+.SH FILES
+.TP
+.I /etc/alma-certify/alma-certify.conf
+System configuration: server URL, run directory, and defaults for the options above.
+.TP
+.I /var/cache/alma-certify/token.json
+The submission token from
+.BR "alma\-certify register" .
+Mode 0600 in a 0700 directory: it authorizes uploads as you. Not in
+.IR /etc ,
+because it is a credential this machine fetches for itself and can fetch again, not configuration.
+.TP
+.I /var/lib/alma-certify/runs
+Run state, one directory per run, holding the journal, the report, and the artifacts. Readable by
+root only, because an inventory names the machine down to its serial numbers.
+.TP
+.I /usr/share/alma-certify
+The suite itself, private to this package.
+.SH EXIT STATUS
+.TP
+.B 0
+Everything that ran passed.
+.TP
+.B 1
+The run finished and something it tested failed.
+.TP
+.B 2
+The command could not do what was asked.
+.TP
+.B 3
+The command line was wrong.
+.TP
+.B 4
+The host is not a supported AlmaLinux release and the prompt to continue anyway was declined, or
+.B submit
+was given a run that cannot be uploaded: one made on another distribution, or a whole-machine run
+made inside a virtual machine. Its own code rather than a usage error, so a script driving the suite
+can tell being blocked apart from hardware that ran and failed.
+.SH SEE ALSO
+The suite's own documentation, in
+.IR /usr/share/doc/alma-certify/ ,
+covers the report schema and what each test measures.
+.SH BUGS
+Report bugs at
+.UR https://github.com/AlmaLinux/alma-certify/issues
+.UE .

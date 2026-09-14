@@ -1,0 +1,82 @@
+name: Release
+
+# Publishes the vendored bundle, and proves the tag builds.
+#
+# It does not publish Source0. Source0 is GitHub's own archive of the v<version> tag, which GitHub
+# attaches to every release as "Source code (tar.gz)" without being asked. Building a second copy
+# of the same thing here would only invite somebody to use the wrong one.
+#
+# What GitHub cannot produce is the vendored bundle: the same tree with clpeak's source already in
+# alma_certify/data/, so it unpacks and runs with the GPU compute benchmark working and nothing to
+# fetch. Nothing in this project consumes it - the spec takes clpeak separately as Source1, so
+# `Provides: bundled(clpeak)` stays verifiable against krrishnarraj/clpeak - but it is the artifact
+# somebody packaging this elsewhere, or working offline, actually wants.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish the source tarball
+    runs-on: ubuntu-latest
+    container: almalinux:10
+    steps:
+      - name: Build requirements
+        run: |
+          dnf install -y make git tar xz zstd rpm-build dnf-command\(config-manager\)
+          dnf config-manager --set-enabled crb
+          dnf install -y python3-devel python3-pytest
+
+      - uses: actions/checkout@v7
+
+      # The tag is the release, so the version it names and the version the code reports have to be
+      # the same thing. They are edited in different files and have drifted in other projects; this
+      # is a two-line check rather than a postmortem.
+      - name: The tag matches the version in the tree
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          coded=$(make --no-print-directory version)
+          spec=$(rpmspec -P packaging/alma-certify.spec | awk '/^Version:/ {print $2}')
+          echo "tag=$tagged  __init__=$coded  spec=$spec"
+          test "$tagged" = "$coded"
+          test "$tagged" = "$spec"
+
+      # Builds the plain tarball on its way, which is what `make rpm` below consumes.
+      - name: Build the vendored bundle
+        run: make vendored-tarball
+
+      # Proving the artifact builds a package before publishing it, rather than finding out when
+      # somebody imports it into dist-git. %check runs the suite against the tarball's own contents.
+      - name: It builds an RPM
+        run: |
+          make rpm
+          ls -1 build/rpm/RPMS/noarch/*.rpm
+
+      # So whoever downloads the bundle can check it against something the release itself states.
+      - name: Checksum
+        id: sum
+        run: |
+          cd build/rpm/SOURCES
+          name="alma-certify-vendored-${GITHUB_REF_NAME#v}.tar.zst"
+          test -s "$name"
+          sha512sum "$name" | tee "$name.sha512"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            build/rpm/SOURCES/${{ steps.sum.outputs.name }}
+            build/rpm/SOURCES/${{ steps.sum.outputs.name }}.sha512
+          body: |
+            **Source code (tar.gz)** below is `Source0`: GitHub's archive of this tag, which is
+            what the spec and dist-git use. clpeak is not in it, and is not meant to be: the
+            spec takes it separately as `Source1` from its own upstream.
+
+            **`alma-certify-vendored-*.tar.zst`** is a self-contained bundle of the same tree
+            with clpeak's source already in `alma_certify/data/`. Unpack and run, with the GPU
+            compute benchmark working and nothing to fetch. Nothing here consumes it; it is for
+            anyone packaging this elsewhere or working offline.
